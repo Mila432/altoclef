@@ -7,7 +7,6 @@ import adris.altoclef.eventbus.events.ChatMessageEvent;
 import adris.altoclef.eventbus.events.TaskFinishedEvent;
 import adris.altoclef.ui.MessagePriority;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.network.message.MessageType;
 
 /**
  * The butler system lets authorized players send commands to the bot to execute.
@@ -126,7 +125,7 @@ public class Butler {
         _currentUser = username;
         sendWhisper("Command Executing: " + message, MessagePriority.TIMELY);
         String prefix = ButlerConfig.getInstance().requirePrefixMsg ? _mod.getModSettings().getCommandPrefix() : "";
-        AltoClef.getCommandExecutor().execute(prefix+message, () -> {
+        AltoClef.getCommandExecutor().execute(prefix + message, () -> {
             // On finish
             sendWhisper("Command Finished: " + message, MessagePriority.TIMELY);
             if (!_commandInstantRan) {

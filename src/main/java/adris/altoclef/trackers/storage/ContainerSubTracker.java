@@ -58,12 +58,12 @@ public class ContainerSubTracker extends Tracker {
 
     private void onBlockInteract(BlockPos pos, Block block) {
         if (block instanceof AbstractFurnaceBlock ||
-            block instanceof ChestBlock ||
-            block.equals(Blocks.ENDER_CHEST) ||
-            block instanceof HopperBlock ||
-            block instanceof ShulkerBoxBlock ||
-            block instanceof DispenserBlock ||
-            block instanceof BarrelBlock) {
+                block instanceof ChestBlock ||
+                block.equals(Blocks.ENDER_CHEST) ||
+                block instanceof HopperBlock ||
+                block instanceof ShulkerBoxBlock ||
+                block instanceof DispenserBlock ||
+                block instanceof BarrelBlock) {
             _lastBlockPosInteraction = pos;
             _lastBlockInteraction = block;
         }

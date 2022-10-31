@@ -19,7 +19,7 @@ public final class ChatInputMixin {
             cancellable = true
     )
     private void sendChatMessage(String msg, @Nullable Text preview, CallbackInfo ci) {
-        SendChatEvent event = new SendChatEvent(msg,preview);
+        SendChatEvent event = new SendChatEvent(msg, preview);
         EventBus.publish(event);
         if (event.isCancelled()) {
             ci.cancel();
