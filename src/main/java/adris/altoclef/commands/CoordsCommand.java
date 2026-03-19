@@ -12,6 +12,10 @@ public class CoordsCommand extends Command {
 
     @Override
     protected void call(AltoClef mod, ArgParser parser) {
+        if (mod.getPlayer() == null) {
+        }
+        if (WorldHelper.getCurrentDimension() == null) {
+        }
         mod.log("CURRENT COORDINATES: " + mod.getPlayer().getBlockPos().toShortString() + " (Current dimension: " + WorldHelper.getCurrentDimension() + ")");
         finish();
     }

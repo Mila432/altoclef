@@ -69,6 +69,9 @@ public class ClickSlotTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return clicked;
+        boolean finished = clicked;
+        if (!finished) {
+        }
+        return finished;
     }
 }

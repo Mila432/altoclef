@@ -28,9 +28,13 @@ public class BlockRange {
     public boolean contains(BlockPos pos, Dimension dimension) {
         if (this.dimension != dimension)
             return false;
-        return (start.getX() <= pos.getX() && pos.getX() <= end.getX() &&
-                start.getZ() <= pos.getZ() && pos.getZ() <= end.getZ() &&
-                start.getY() <= pos.getY() && pos.getY() <= end.getY());
+        boolean xInRange = start.getX() <= pos.getX() && pos.getX() <= end.getX();
+        boolean zInRange = start.getZ() <= pos.getZ() && pos.getZ() <= end.getZ();
+        boolean yInRange = start.getY() <= pos.getY() && pos.getY() <= end.getY();
+        boolean result = xInRange && zInRange && yInRange;
+        if (!result) {
+        }
+        return result;
     }
 
     @JsonIgnore

@@ -17,6 +17,11 @@ import net.minecraft.util.DyeColor;
 
 import java.util.*;
 
+//#if MC >= 12111
+import net.minecraft.item.FuelRegistry;
+import net.minecraft.resource.featuretoggle.FeatureFlags;
+//#endif
+
 /**
  * Helper functions and definitions for useful groupings of items
  */
@@ -88,14 +93,14 @@ public class ItemHelper {
             Items.STRIPPED_CRIMSON_STEM, Items.STRIPPED_WARPED_STEM, Items.STRIPPED_CRIMSON_HYPHAE,
             Items.STRIPPED_WARPED_HYPHAE, Items.MANGROVE_LOG, Items.MANGROVE_WOOD, Items.STRIPPED_MANGROVE_LOG,
             Items.STRIPPED_MANGROVE_WOOD, Items.CHERRY_LOG, Items.CHERRY_WOOD, Items.STRIPPED_CHERRY_LOG,
-            Items.STRIPPED_CHERRY_WOOD};
+            Items.STRIPPED_CHERRY_WOOD, Items.BAMBOO_BLOCK, Items.STRIPPED_BAMBOO_BLOCK};
     public static final Item[] STRIPPED_LOGS = new Item[]{Items.STRIPPED_ACACIA_LOG, Items.STRIPPED_BIRCH_LOG,
             Items.STRIPPED_DARK_OAK_LOG, Items.STRIPPED_OAK_LOG, Items.STRIPPED_JUNGLE_LOG, Items.STRIPPED_SPRUCE_LOG,
             Items.STRIPPED_CRIMSON_STEM, Items.STRIPPED_WARPED_STEM, Items.STRIPPED_MANGROVE_LOG,
-            Items.STRIPPED_CHERRY_LOG};
+            Items.STRIPPED_CHERRY_LOG, Items.STRIPPED_BAMBOO_BLOCK};
     public static final Item[] STRIPPABLE_LOGS = new Item[]{Items.ACACIA_LOG, Items.BIRCH_LOG, Items.DARK_OAK_LOG,
             Items.OAK_LOG, Items.JUNGLE_LOG, Items.SPRUCE_LOG, Items.CRIMSON_STEM, Items.WARPED_STEM, Items.MANGROVE_LOG,
-            Items.CHERRY_LOG};
+            Items.CHERRY_LOG, Items.BAMBOO_BLOCK};
     public static final Item[] DYE = new Item[]{Items.WHITE_DYE, Items.BLACK_DYE, Items.BLUE_DYE, Items.BROWN_DYE, Items.CYAN_DYE, Items.GRAY_DYE, Items.GREEN_DYE, Items.LIGHT_BLUE_DYE, Items.LIGHT_GRAY_DYE, Items.LIME_DYE, Items.MAGENTA_DYE, Items.ORANGE_DYE, Items.PINK_DYE, Items.PURPLE_DYE, Items.RED_DYE, Items.YELLOW_DYE};
     public static final Item[] WOOL = new Item[]{Items.WHITE_WOOL, Items.BLACK_WOOL, Items.BLUE_WOOL, Items.BROWN_WOOL, Items.CYAN_WOOL, Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL, Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL, Items.PURPLE_WOOL, Items.RED_WOOL, Items.YELLOW_WOOL};
     public static final Item[] BED = new Item[]{Items.WHITE_BED, Items.BLACK_BED, Items.BLUE_BED, Items.BROWN_BED, Items.CYAN_BED, Items.GRAY_BED, Items.GREEN_BED, Items.LIGHT_BLUE_BED, Items.LIGHT_GRAY_BED, Items.LIME_BED, Items.MAGENTA_BED, Items.ORANGE_BED, Items.PINK_BED, Items.PURPLE_BED, Items.RED_BED, Items.YELLOW_BED};
@@ -161,6 +166,8 @@ public class ItemHelper {
             put(Items.STRIPPED_JUNGLE_WOOD, Items.JUNGLE_PLANKS);
             put(Items.STRIPPED_SPRUCE_WOOD, Items.SPRUCE_PLANKS);
             put(Items.STRIPPED_WARPED_HYPHAE, Items.WARPED_PLANKS);
+            put(Items.BAMBOO_BLOCK, Items.BAMBOO_PLANKS);
+            put(Items.STRIPPED_BAMBOO_BLOCK, Items.BAMBOO_PLANKS);
         }
     };
     private static final Map<Item, Item> planksToLogs = new HashMap<>() {
@@ -175,6 +182,7 @@ public class ItemHelper {
             put(Items.JUNGLE_PLANKS, Items.JUNGLE_LOG);
             put(Items.SPRUCE_PLANKS, Items.SPRUCE_LOG);
             put(Items.WARPED_PLANKS, Items.WARPED_STEM);
+            put(Items.BAMBOO_PLANKS, Items.BAMBOO_BLOCK);
         }
     };
     private static final Map<Item, Item> strippedToLogs = new HashMap<>() {
@@ -189,6 +197,7 @@ public class ItemHelper {
             put(Items.STRIPPED_JUNGLE_LOG, Items.JUNGLE_LOG);
             put(Items.STRIPPED_SPRUCE_LOG, Items.SPRUCE_LOG);
             put(Items.STRIPPED_WARPED_STEM, Items.WARPED_STEM);
+            put(Items.STRIPPED_BAMBOO_BLOCK, Items.BAMBOO_BLOCK);
         }
     };
     // This is kinda jank ngl
@@ -220,16 +229,16 @@ public class ItemHelper {
     private static final Map<WoodType, WoodItems> woodMap = new HashMap<WoodType, WoodItems>() {
         {
             p(WoodType.CHERRY, "cherry", Items.CHERRY_PLANKS, Items.CHERRY_LOG, Items.STRIPPED_CHERRY_LOG, Items.STRIPPED_CHERRY_WOOD, Items.CHERRY_WOOD, Items.CHERRY_SIGN, Items.CHERRY_HANGING_SIGN, Items.CHERRY_DOOR, Items.CHERRY_BUTTON, Items.CHERRY_STAIRS, Items.CHERRY_SLAB, Items.CHERRY_FENCE, Items.CHERRY_FENCE_GATE, Items.CHERRY_BOAT, Items.CHERRY_SAPLING, Items.CHERRY_LEAVES, Items.CHERRY_PRESSURE_PLATE, Items.CHERRY_TRAPDOOR);
-            p(WoodType.BAMBOO, "bamboo", null, null, Items.STRIPPED_BAMBOO_BLOCK, null, null, Items.BAMBOO_SIGN, Items.BAMBOO_HANGING_SIGN, Items.BAMBOO_DOOR, Items.BAMBOO_BUTTON, Items.BAMBOO_STAIRS, Items.BAMBOO_SLAB, Items.BAMBOO_FENCE, Items.BAMBOO_FENCE_GATE, Items.BAMBOO_RAFT, Items.BAMBOO, null, Items.BAMBOO_PRESSURE_PLATE, Items.BAMBOO_TRAPDOOR);
+            p(WoodType.BAMBOO, "bamboo", Items.BAMBOO_PLANKS, Items.BAMBOO_BLOCK, Items.STRIPPED_BAMBOO_BLOCK, Items.STRIPPED_BAMBOO_BLOCK, Items.BAMBOO_BLOCK, Items.BAMBOO_SIGN, Items.BAMBOO_HANGING_SIGN, Items.BAMBOO_DOOR, Items.BAMBOO_BUTTON, Items.BAMBOO_STAIRS, Items.BAMBOO_SLAB, Items.BAMBOO_FENCE, Items.BAMBOO_FENCE_GATE, Items.BAMBOO_RAFT, Items.BAMBOO, Items.UNSUPPORTED, Items.BAMBOO_PRESSURE_PLATE, Items.BAMBOO_TRAPDOOR);
             p(WoodType.MANGROVE, "mangrove", Items.MANGROVE_PLANKS, Items.MANGROVE_LOG, Items.STRIPPED_MANGROVE_LOG, Items.STRIPPED_MANGROVE_WOOD, Items.MANGROVE_WOOD, Items.MANGROVE_SIGN, Items.MANGROVE_HANGING_SIGN, Items.MANGROVE_DOOR, Items.MANGROVE_BUTTON, Items.MANGROVE_STAIRS, Items.MANGROVE_SLAB, Items.MANGROVE_FENCE, Items.MANGROVE_FENCE_GATE, Items.MANGROVE_BOAT, Items.MANGROVE_PROPAGULE, Items.MANGROVE_LEAVES, Items.MANGROVE_PRESSURE_PLATE, Items.MANGROVE_TRAPDOOR);
             p(WoodType.ACACIA, "acacia", Items.ACACIA_PLANKS, Items.ACACIA_LOG, Items.STRIPPED_ACACIA_LOG, Items.STRIPPED_ACACIA_WOOD, Items.ACACIA_WOOD, Items.ACACIA_SIGN, Items.ACACIA_HANGING_SIGN, Items.ACACIA_DOOR, Items.ACACIA_BUTTON, Items.ACACIA_STAIRS, Items.ACACIA_SLAB, Items.ACACIA_FENCE, Items.ACACIA_FENCE_GATE, Items.ACACIA_BOAT, Items.ACACIA_SAPLING, Items.ACACIA_LEAVES, Items.ACACIA_PRESSURE_PLATE, Items.ACACIA_TRAPDOOR);
             p(WoodType.BIRCH, "birch", Items.BIRCH_PLANKS, Items.BIRCH_LOG, Items.STRIPPED_BIRCH_LOG, Items.STRIPPED_BIRCH_WOOD, Items.BIRCH_WOOD, Items.BIRCH_SIGN, Items.BIRCH_HANGING_SIGN, Items.BIRCH_DOOR, Items.BIRCH_BUTTON, Items.BIRCH_STAIRS, Items.BIRCH_SLAB, Items.BIRCH_FENCE, Items.BIRCH_FENCE_GATE, Items.BIRCH_BOAT, Items.BIRCH_SAPLING, Items.BIRCH_LEAVES, Items.BIRCH_PRESSURE_PLATE, Items.BIRCH_TRAPDOOR);
-            p(WoodType.CRIMSON, "crimson", Items.CRIMSON_PLANKS, Items.CRIMSON_STEM, Items.STRIPPED_CRIMSON_STEM, Items.STRIPPED_CRIMSON_HYPHAE, Items.CRIMSON_HYPHAE, Items.CRIMSON_SIGN, Items.CRIMSON_HANGING_SIGN, Items.CRIMSON_DOOR, Items.CRIMSON_BUTTON, Items.CRIMSON_STAIRS, Items.CRIMSON_SLAB, Items.CRIMSON_FENCE, Items.CRIMSON_FENCE_GATE, null, Items.CRIMSON_FUNGUS, null, Items.CRIMSON_PRESSURE_PLATE, Items.CRIMSON_TRAPDOOR);
+            p(WoodType.CRIMSON, "crimson", Items.CRIMSON_PLANKS, Items.CRIMSON_STEM, Items.STRIPPED_CRIMSON_STEM, Items.STRIPPED_CRIMSON_HYPHAE, Items.CRIMSON_HYPHAE, Items.CRIMSON_SIGN, Items.CRIMSON_HANGING_SIGN, Items.CRIMSON_DOOR, Items.CRIMSON_BUTTON, Items.CRIMSON_STAIRS, Items.CRIMSON_SLAB, Items.CRIMSON_FENCE, Items.CRIMSON_FENCE_GATE, Items.UNSUPPORTED, Items.CRIMSON_FUNGUS, Items.UNSUPPORTED, Items.CRIMSON_PRESSURE_PLATE, Items.CRIMSON_TRAPDOOR);
             p(WoodType.DARK_OAK, "dark_oak", Items.DARK_OAK_PLANKS, Items.DARK_OAK_LOG, Items.STRIPPED_DARK_OAK_LOG, Items.STRIPPED_DARK_OAK_WOOD, Items.DARK_OAK_WOOD, Items.DARK_OAK_SIGN, Items.DARK_OAK_HANGING_SIGN, Items.DARK_OAK_DOOR, Items.DARK_OAK_BUTTON, Items.DARK_OAK_STAIRS, Items.DARK_OAK_SLAB, Items.DARK_OAK_FENCE, Items.DARK_OAK_FENCE_GATE, Items.DARK_OAK_BOAT, Items.DARK_OAK_SAPLING, Items.DARK_OAK_LEAVES, Items.DARK_OAK_PRESSURE_PLATE, Items.DARK_OAK_TRAPDOOR);
             p(WoodType.OAK, "oak", Items.OAK_PLANKS, Items.OAK_LOG, Items.STRIPPED_OAK_LOG, Items.STRIPPED_OAK_WOOD, Items.OAK_WOOD, Items.OAK_SIGN, Items.OAK_HANGING_SIGN, Items.OAK_DOOR, Items.OAK_BUTTON, Items.OAK_STAIRS, Items.OAK_SLAB, Items.OAK_FENCE, Items.OAK_FENCE_GATE, Items.OAK_BOAT, Items.OAK_SAPLING, Items.OAK_LEAVES, Items.OAK_PRESSURE_PLATE, Items.OAK_TRAPDOOR);
             p(WoodType.JUNGLE, "jungle", Items.JUNGLE_PLANKS, Items.JUNGLE_LOG, Items.STRIPPED_JUNGLE_LOG, Items.STRIPPED_JUNGLE_WOOD, Items.JUNGLE_WOOD, Items.JUNGLE_SIGN, Items.JUNGLE_HANGING_SIGN, Items.JUNGLE_DOOR, Items.JUNGLE_BUTTON, Items.JUNGLE_STAIRS, Items.JUNGLE_SLAB, Items.JUNGLE_FENCE, Items.JUNGLE_FENCE_GATE, Items.JUNGLE_BOAT, Items.JUNGLE_SAPLING, Items.JUNGLE_LEAVES, Items.JUNGLE_PRESSURE_PLATE, Items.JUNGLE_TRAPDOOR);
             p(WoodType.SPRUCE, "spruce", Items.SPRUCE_PLANKS, Items.SPRUCE_LOG, Items.STRIPPED_SPRUCE_LOG, Items.STRIPPED_SPRUCE_WOOD, Items.SPRUCE_WOOD, Items.SPRUCE_SIGN, Items.SPRUCE_HANGING_SIGN, Items.SPRUCE_DOOR, Items.SPRUCE_BUTTON, Items.SPRUCE_STAIRS, Items.SPRUCE_SLAB, Items.SPRUCE_FENCE, Items.SPRUCE_FENCE_GATE, Items.SPRUCE_BOAT, Items.SPRUCE_SAPLING, Items.SPRUCE_LEAVES, Items.SPRUCE_PRESSURE_PLATE, Items.SPRUCE_TRAPDOOR);
-            p(WoodType.WARPED, "warped", Items.WARPED_PLANKS, Items.WARPED_STEM, Items.STRIPPED_WARPED_STEM, Items.STRIPPED_WARPED_HYPHAE, Items.WARPED_HYPHAE, Items.WARPED_SIGN, Items.WARPED_HANGING_SIGN, Items.WARPED_DOOR, Items.WARPED_BUTTON, Items.WARPED_STAIRS, Items.WARPED_SLAB, Items.WARPED_FENCE, Items.WARPED_FENCE_GATE, null, Items.WARPED_FUNGUS, null, Items.WARPED_PRESSURE_PLATE, Items.WARPED_TRAPDOOR);
+            p(WoodType.WARPED, "warped", Items.WARPED_PLANKS, Items.WARPED_STEM, Items.STRIPPED_WARPED_STEM, Items.STRIPPED_WARPED_HYPHAE, Items.WARPED_HYPHAE, Items.WARPED_SIGN, Items.WARPED_HANGING_SIGN, Items.WARPED_DOOR, Items.WARPED_BUTTON, Items.WARPED_STAIRS, Items.WARPED_SLAB, Items.WARPED_FENCE, Items.WARPED_FENCE_GATE, Items.UNSUPPORTED, Items.WARPED_FUNGUS, Items.UNSUPPORTED, Items.WARPED_PRESSURE_PLATE, Items.WARPED_TRAPDOOR);
         }
 
         void p(WoodType type, String prefix, Item planks, Item log, Item strippedLog, Item strippedWood, Item wood, Item sign, Item hangingSign, Item door, Item button, Item stairs, Item slab, Item fence, Item fenceGate, Item boat, Item sapling, Item leaves, Item pressurePlate, Item trapdoor) {
@@ -390,7 +399,11 @@ public class ItemHelper {
             return false;
         if (isStackProtected(mod, stack))
             return false;
-        return mod.getModSettings().isThrowaway(stack.getItem()) || mod.getModSettings().shouldThrowawayUnusedItems();
+        boolean isThrowaway = mod.getModSettings().isThrowaway(stack.getItem());
+        boolean shouldThrowawayUnused = mod.getModSettings().shouldThrowawayUnusedItems();
+        if (!isThrowaway && !shouldThrowawayUnused) {
+        }
+        return isThrowaway || shouldThrowawayUnused;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -401,10 +414,40 @@ public class ItemHelper {
     }
 
     private static Map<Item, Integer> getFuelTimeMap() {
-        if (fuelTimeMap == null) {
-            fuelTimeMap = AbstractFurnaceBlockEntity.createFuelTimeMap();
+        //#if MC >= 12111
+        try {
+            // Wait until the bot is actually in a world so we can grab the real registry
+            if (AltoClef.getInstance().getWorld() == null) {
+                return new HashMap<>(); // Return an empty map temporarily if we aren't in-game yet
+            }
+            
+            if (fuelTimeMap == null) {
+                fuelTimeMap = new HashMap<>();
+                // Safely grab the actual live registries from the world instead of an EMPTY shell
+                net.minecraft.registry.RegistryWrapper.WrapperLookup registries = AltoClef.getInstance().getWorld().getRegistryManager();
+                net.minecraft.resource.featuretoggle.FeatureSet features = AltoClef.getInstance().getWorld().getEnabledFeatures();
+                
+                // Build the registry using the world's real data
+                FuelRegistry fuelRegistry = FuelRegistry.createDefault(registries, features);
+                for (Item fuelItem : fuelRegistry.getFuelItems()) {
+                    fuelTimeMap.put(fuelItem, fuelRegistry.getFuelTicks(new ItemStack(fuelItem)));
+                }
+            }
+        } catch (Exception e) {
+            // If it still fails, print the error so we aren't blind to it, and use native Items class
+            e.printStackTrace();
+            fuelTimeMap = new HashMap<>();
+            fuelTimeMap.put(net.minecraft.item.Items.COAL, 1600);
+            fuelTimeMap.put(net.minecraft.item.Items.CHARCOAL, 1600);
+            fuelTimeMap.put(net.minecraft.item.Items.COAL_BLOCK, 16000);
         }
-        return fuelTimeMap;
+        //#else
+        //$$ if (fuelTimeMap == null) {
+        //$$     fuelTimeMap = AbstractFurnaceBlockEntity.createFuelTimeMap();
+        //$$ }
+        //#endif
+        
+        return fuelTimeMap == null ? new HashMap<>() : fuelTimeMap;
     }
 
     public static double getFuelAmount(Item... items) {

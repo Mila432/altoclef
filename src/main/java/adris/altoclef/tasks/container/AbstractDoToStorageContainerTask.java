@@ -41,10 +41,10 @@ public abstract class AbstractDoToStorageContainerTask extends Task {
 
         // We're open
         if (currentContainerType != null && ContainerType.screenHandlerMatches(currentContainerType)) {
-
             Optional<ContainerCache> cache = mod.getItemStorage().getContainerAtPosition(targetPos);
             if (cache.isPresent()) {
                 return onContainerOpenSubtask(mod, cache.get());
+            } else {
             }
         }
 

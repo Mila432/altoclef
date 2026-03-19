@@ -392,23 +392,8 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
             if (mod.getItemStorage().getItemCount(target.getOutputItem()) >= target.getTargetCount()) {
                 continue;
             }
-
-            // Get the recipe to send based on the target recipe and output item
-            Optional<WrappedRecipeEntry> recipeToSend = JankCraftingRecipeMapping.getMinecraftMappedRecipe(target.getRecipe(), target.getOutputItem());
-
-            // Get the client player entity
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
-
-            // If crafting book is enabled, the recipe to send exists, and the player has the recipe in their recipe book, return a CraftGenericWithRecipeBooksTask
-            if (mod.getModSettings().shouldUseCraftingBookToCraft() && recipeToSend.isPresent()) {
-                assert player != null;
-                if (player.getRecipeBook().contains(recipeToSend.get().id())) {
-                    return new CraftGenericWithRecipeBooksTask(target);
-                }
-            }
-
-            // Return a CraftGenericManuallyTask by default
-            return new CraftGenericManuallyTask(target);
+            // Return a CraftGenericWithRecipeBooksTask to try standard recipes before falling back
+            return new CraftGenericWithRecipeBooksTask(target);
         }
 
         return null;
@@ -437,7 +422,13 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
         Optional<BlockPos> closestCraftingTable = mod.getBlockScanner().getNearestBlock(Blocks.CRAFTING_TABLE);
 
         // If a crafting table is within 40 blocks of the player, return positive infinity.
-        if (closestCraftingTable.isPresent() && closestCraftingTable.get().isWithinDistance(mod.getPlayer().getPos(), 40)) {
+        if (closestCraftingTable.isPresent() && 
+            //#if MC >= 12111
+            closestCraftingTable.get().isWithinDistance(mod.getPlayer().getEntityPos(), 40)
+            //#else
+            //$$ closestCraftingTable.get().isWithinDistance(mod.getPlayer().getPos(), 40)
+            //#endif
+        ) {
             return Double.POSITIVE_INFINITY;
         }
 

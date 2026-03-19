@@ -1,6 +1,5 @@
 package adris.altoclef.util;
 
-import adris.altoclef.Debug;
 import net.minecraft.item.Item;
 
 import java.util.Arrays;
@@ -39,7 +38,6 @@ public class CraftingRecipe {
 
     public static CraftingRecipe newShapedRecipe(String shortName, ItemTarget[] slots, int outputCount) {
         if (slots.length != 4 && slots.length != 9) {
-            Debug.logError("Invalid shaped crafting recipe, must be either size 4 or 9. Size given: " + slots.length);
             return null;
         }
 
@@ -47,6 +45,12 @@ public class CraftingRecipe {
         result.shortName = shortName;
         // Remove null
         result.slots = Arrays.stream(slots).map(target -> target == null ? ItemTarget.EMPTY : target).toArray(ItemTarget[]::new);
+        
+        // Log creation of recipe with 0 output count (likely a bug)
+        if (outputCount <= 0) {
+            outputCount = 1;
+        }
+        
         result.outputCount = outputCount;
         if (slots.length == 4) {
             result.width = 2;
@@ -79,6 +83,11 @@ public class CraftingRecipe {
     }
 
     public ItemTarget getSlot(int index) {
+        // Log out of bounds access (indicates recipe usage error)
+        if (index < 0 || index >= slots.length) {
+            return ItemTarget.EMPTY;
+        }
+        
         ItemTarget result = slots[index];
         return result != null ? result : ItemTarget.EMPTY;
     }

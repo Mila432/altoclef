@@ -33,6 +33,7 @@ public class ContainerCache {
         // do NOT count the furnace output slot as an empty slot, it cannot be used.
         boolean isFurnace = (screenHandler instanceof FurnaceScreenHandler);
 
+
         // Iterate through all STORAGE slots
         for (int i = start; i < end; ++i) {
             ItemStack stack = screenHandler.slots.get(i).getStack().copy();
@@ -41,6 +42,7 @@ public class ContainerCache {
                 // Ignore furnace output slot
                 if (!(isFurnace && i == 2)) {
                     _emptySlots++;
+                } else {
                 }
             } else {
                 Item item = stack.getItem();
@@ -49,6 +51,7 @@ public class ContainerCache {
                 onStack.accept(stack);
             }
         }
+        
     }
 
     public int getItemCount(Item... items) {

@@ -39,7 +39,12 @@ public class CollectSticksTask extends ResourceTask {
     @Override
     protected double getPickupRange(AltoClef mod) {
         ItemStorageTracker storage = mod.getItemStorage();
-        if (storage.getItemCount(ItemHelper.PLANKS)*4+storage.getItemCount(ItemHelper.LOG)*4*4 > _targetCount) return 10;
+        int plankCount = storage.getItemCount(ItemHelper.PLANKS);
+        int logCount = storage.getItemCount(ItemHelper.LOG);
+        
+        if (plankCount * 4 + logCount * 4 * 4 > _targetCount) {
+            return 10;
+        }
 
         return 35;
     }
@@ -48,12 +53,18 @@ public class CollectSticksTask extends ResourceTask {
     protected Task onResourceTick(AltoClef mod) {
         // try to craft sticks from bamboo
         if (mod.getItemStorage().getItemCount(Items.BAMBOO) >= 2) {
-            return new CraftInInventoryTask(new RecipeTarget(Items.STICK, Math.min(mod.getItemStorage().getItemCount(Items.BAMBOO)/2,_targetCount), CraftingRecipe.newShapedRecipe("sticks", new ItemTarget[]{new ItemTarget("bamboo"), null, new ItemTarget("bamboo"), null}, 1)));
+            int bambooCount = mod.getItemStorage().getItemCount(Items.BAMBOO);
+            int bambooCraftTarget = Math.min(bambooCount / 2, _targetCount);
+            return new CraftInInventoryTask(new RecipeTarget(Items.STICK, bambooCraftTarget, CraftingRecipe.newShapedRecipe("sticks", new ItemTarget[]{new ItemTarget("bamboo"), null, new ItemTarget("bamboo"), null}, 1)));
         }
 
         Optional<BlockPos> nearestBush = mod.getBlockScanner().getNearestBlock(Blocks.DEAD_BUSH);
         // If there's a dead bush within range, go get it
-        if (nearestBush.isPresent() && nearestBush.get().isWithinDistance(mod.getPlayer().getPos(), 20)) {
+        //#if MC >= 12111
+        if (nearestBush.isPresent() && nearestBush.get().isWithinDistance(mod.getPlayer().getEntityPos(), 20)) {
+        //#else
+        //$$ if (nearestBush.isPresent() && nearestBush.get().isWithinDistance(mod.getPlayer().getPos(), 20)) {
+        //#endif
             ResourceTask task = new MineAndCollectTask(Items.DEAD_BUSH, 1, new Block[]{Blocks.DEAD_BUSH}, MiningRequirement.HAND);
             task.setAllowContainers(false);
 
@@ -70,7 +81,10 @@ public class CollectSticksTask extends ResourceTask {
 
     @Override
     protected boolean isEqualResource(ResourceTask other) {
-        return other instanceof CollectSticksTask;
+        if (!(other instanceof CollectSticksTask)) {
+            return false;
+        }
+        return true;
     }
 
     @Override

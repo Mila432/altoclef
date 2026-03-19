@@ -12,6 +12,10 @@ public class CollectSignTask extends CraftWithMatchingPlanksTask {
     public CollectSignTask(Item[] targets, ItemTarget planks, int count) {
         // Top 6 are planks, must be the same.
         super(targets, woodItems -> woodItems.sign, createRecipe(planks), new boolean[]{true, true, true, true, true, true, false, false, false}, count);
+        if (targets == null || targets.length == 0) {
+        }
+        if (planks == null) {
+        }
     }
 
     public CollectSignTask(Item target, String plankCatalogueName, int count) {

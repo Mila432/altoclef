@@ -43,7 +43,11 @@ public abstract class RunAwayFromEntitiesTask extends CustomBaritoneGoalTask {
 
         @Override
         protected List<net.minecraft.entity.Entity> getEntities(AltoClef mod) {
-            return _runAwaySupplier.get();
+            List<Entity> entities = _runAwaySupplier.get();
+            if (entities == null) {
+            } else {
+            }
+            return entities;
         }
     }
 }

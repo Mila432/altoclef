@@ -1,7 +1,6 @@
 package adris.altoclef.tasks;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.multiversion.recipemanager.WrappedRecipeEntry;
 import adris.altoclef.tasks.slot.EnsureFreePlayerCraftingGridTask;
 import adris.altoclef.tasks.slot.ReceiveCraftingOutputSlotTask;
@@ -125,8 +124,10 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
         // Check if neither the big crafting UI nor the player inventory UI is open
         if (!isBigCraftingOpen) {
             PlayerSlot[] playerInputSlots = PlayerSlot.CRAFT_INPUT_SLOTS;
+
             for (PlayerSlot playerInputSlot : playerInputSlots) {
                 ItemStack playerInput = StorageHelper.getItemStackInSlot(playerInputSlot);
+
                 if (!playerInput.isEmpty()) {
                     // Return a task to ensure a free player crafting grid
                     return new EnsureFreePlayerCraftingGridTask();
@@ -135,14 +136,48 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
         }
 
         Optional<WrappedRecipeEntry> recipeToSend = JankCraftingRecipeMapping.getMinecraftMappedRecipe(target.getRecipe(), target.getOutputItem());
+
         if (recipeToSend.isPresent()) {
             if (mod.getSlotHandler().canDoSlotAction()) {
                 ClientPlayerEntity player = MinecraftClient.getInstance().player;
                 assert player != null;
                 // Click the recipe to send it
-                mod.getController().clickRecipe(player.currentScreenHandler.syncId, recipeToSend.get().asRecipe(), true);
-                mod.getSlotHandler().registerSlotAction();
+                //#if MC >= 12111
+                net.minecraft.recipe.NetworkRecipeId recipeId = null;
+                net.minecraft.client.recipebook.ClientRecipeBook book = MinecraftClient.getInstance().player.getRecipeBook();
+                net.minecraft.util.context.ContextParameterMap context = net.minecraft.recipe.display.SlotDisplayContexts.createParameters(MinecraftClient.getInstance().world);
+                for (net.minecraft.client.gui.screen.recipebook.RecipeResultCollection collection : book.getOrderedResults()) {
+                    for (net.minecraft.recipe.RecipeDisplayEntry displayEntry : collection.getAllRecipes()) {
+                        net.minecraft.recipe.display.RecipeDisplay display = displayEntry.display();
+                        net.minecraft.item.ItemStack resultStack = net.minecraft.item.ItemStack.EMPTY;
+                        if (display instanceof net.minecraft.recipe.display.ShapedCraftingRecipeDisplay shaped) {
+                            resultStack = shaped.result().getFirst(context);
+                        } else if (display instanceof net.minecraft.recipe.display.ShapelessCraftingRecipeDisplay shapeless) {
+                            resultStack = shapeless.result().getFirst(context);
+                        }
+                        if (!resultStack.isEmpty() && resultStack.getItem() == target.getOutputItem()) {
+                            recipeId = displayEntry.id();
+                            break;
+                        }
+                    }
+                    if (recipeId != null) break;
+                }
+
+                if (recipeId != null) {
+                    MinecraftClient.getInstance().interactionManager.clickRecipe(player.currentScreenHandler.syncId, recipeId, true);
+                    mod.getSlotHandler().registerSlotAction();
+                } else {
+                    return new CraftGenericManuallyTask(target);
+                }
+                //#else
+                //$$ Debug.logMessage("CraftGenericWithRecipeBooksTask: Sending clickRecipe.");
+                //$$ mod.getController().clickRecipe(player.currentScreenHandler.syncId, recipeToSend.get().asRecipe(), true);
+                //$$ mod.getSlotHandler().registerSlotAction();
+                //#endif
+            } else {
             }
+        } else {
+            return new CraftGenericManuallyTask(target);
         }
 
         return null;
@@ -175,7 +210,6 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
 
             // Log a message if the targets are not equal
             if (!isEqual) {
-                Debug.logInternal("Task targets are not equal");
             }
 
             // Return the result of the equality check
@@ -183,7 +217,6 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
         }
 
         // Log a message if the other Task is not an instance of CraftGenericWithRecipeBooksTask
-        Debug.logInternal("Task is not an instance of CraftGenericWithRecipeBooksTask");
 
         // Return false if the other Task is not an instance of CraftGenericWithRecipeBooksTask
         return false;

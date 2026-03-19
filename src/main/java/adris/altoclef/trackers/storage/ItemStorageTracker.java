@@ -62,7 +62,9 @@ public class ItemStorageTracker extends Tracker {
             }
             return 0;
         }).reduce(0, Integer::sum);
-        return inventory.getItemCount(true, false, items) + inConversionSlots;
+        int inventoryCount = inventory.getItemCount(true, false, items);
+        int total = inventoryCount + inConversionSlots;
+        return total;
     }
 
     public int getItemCount(ItemTarget... targets) {
@@ -98,10 +100,13 @@ public class ItemStorageTracker extends Tracker {
      * (ex. crafting table slots/furnace input, stuff the player is use )
      */
     public boolean hasItem(Item... items) {
-        return Arrays.stream(getCurrentConversionSlots()).anyMatch(slot -> {
+        boolean inConversionSlots = Arrays.stream(getCurrentConversionSlots()).anyMatch(slot -> {
             ItemStack stack = StorageHelper.getItemStackInSlot(slot);
             return ArrayUtils.contains(items, stack.getItem());
-        }) || inventory.hasItem(true, items);
+        });
+        boolean inInventory = inventory.hasItem(true, items);
+        boolean result = inConversionSlots || inInventory;
+        return result;
     }
 
     public boolean hasItem(boolean playerInventoryOnly, Item... items) {
@@ -306,4 +311,3 @@ public class ItemStorageTracker extends Tracker {
         containers.reset();
     }
 }
-

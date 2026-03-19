@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.beatgame.prioritytask.prioritycalculators;
 
+
 public class StaticItemPriorityCalculator extends ItemPriorityCalculator{
 
     public static StaticItemPriorityCalculator of(int priority) {

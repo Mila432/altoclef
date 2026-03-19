@@ -8,6 +8,8 @@ public class EnchantmentHelperVer {
 
     @Pattern
     public boolean hasBindingCurse(ItemStack stack) {
+        if (stack == null) {
+        }
         //#if MC >= 12100
         return EnchantmentHelper.hasAnyEnchantmentsWith(stack, net.minecraft.component.EnchantmentEffectComponentTypes.PREVENT_ARMOR_CHANGE);
         //#else

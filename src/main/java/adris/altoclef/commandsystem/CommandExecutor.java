@@ -1,7 +1,6 @@
 package adris.altoclef.commandsystem;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.commandsystem.exception.RuntimeCommandException;
 

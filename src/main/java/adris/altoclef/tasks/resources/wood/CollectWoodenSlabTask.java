@@ -11,6 +11,8 @@ public class CollectWoodenSlabTask extends CraftWithMatchingPlanksTask {
 
     public CollectWoodenSlabTask(Item[] targets, ItemTarget planks, int count) {
         super(targets, woodItems -> woodItems.slab, createRecipe(planks), new boolean[]{true, true, true, false, false, false, false, false, false}, count);
+        if (planks == null) {
+        }
     }
 
     public CollectWoodenSlabTask(Item target, String plankCatalogueName, int count) {

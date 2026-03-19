@@ -47,7 +47,12 @@ public class GetToXZTask extends CustomBaritoneGoalTask {
     @Override
     public boolean isFinished() {
         BlockPos cur = AltoClef.getInstance().getPlayer().getBlockPos();
-        return (cur.getX() == x && cur.getZ() == z && (dimension == null || dimension == WorldHelper.getCurrentDimension()));
+        boolean atTarget = cur.getX() == x && cur.getZ() == z;
+        boolean inCorrectDimension = (dimension == null || dimension == WorldHelper.getCurrentDimension());
+        boolean finished = atTarget && inCorrectDimension;
+        if (!finished && (atTarget || inCorrectDimension)) {
+        }
+        return finished;
     }
 
     @Override

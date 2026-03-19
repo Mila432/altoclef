@@ -7,6 +7,8 @@ public class BlockBreakingEvent {
     public double progress;
 
     public BlockBreakingEvent(BlockPos blockPos, double progress) {
+        if (blockPos == null) {
+        }
         this.blockPos = blockPos;
         this.progress = progress;
     }

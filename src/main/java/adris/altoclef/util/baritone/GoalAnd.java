@@ -8,6 +8,8 @@ public class GoalAnd implements Goal {
     private final Goal[] goals;
 
     public GoalAnd(Goal... goals) {
+        if (goals == null) {
+        }
         this.goals = goals;
     }
 
@@ -30,6 +32,7 @@ public class GoalAnd implements Goal {
             for (Goal goal : this.goals) {
                 sum += goal.heuristic(x, y, z);
             }
+        } else {
         }
         return sum;
         /*double min = 1.7976931348623157E308D;

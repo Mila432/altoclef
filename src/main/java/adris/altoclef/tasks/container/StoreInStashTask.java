@@ -69,8 +69,9 @@ public class StoreInStashTask extends Task {
         // Store in valid container
         if (mod.getBlockScanner().anyFound(validContainer, TO_SCAN)) {
             setDebugState("Storing in closest stash container");
+            ItemTarget[] unstored = _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore);
             return new DoToClosestBlockTask(
-                    (BlockPos bpos) -> new StoreInContainerTask(bpos, false, _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore)),
+                    (BlockPos bpos) -> new StoreInContainerTask(bpos, false, unstored),
                     validContainer,
                     TO_SCAN
             );
@@ -88,7 +89,8 @@ public class StoreInStashTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(AltoClef.getInstance(), _toStore).length == 0;
+        boolean finished = _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(AltoClef.getInstance(), _toStore).length == 0;
+        return finished;
     }
 
     @Override

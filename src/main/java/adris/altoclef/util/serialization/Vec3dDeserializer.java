@@ -23,6 +23,8 @@ public class Vec3dDeserializer extends AbstractVectorDeserializer<Vec3d, Double>
 
     @Override
     protected Vec3d deserializeFromUnits(List<Double> units) {
+        if (units.size() != 3) {
+        }
         return new Vec3d(units.get(0), units.get(1), units.get(2));
     }
 

@@ -52,12 +52,14 @@ public class PickupFromContainerTask extends AbstractDoToStorageContainerTask {
                 if (canFit || !currBestCanFit) {
                     if (overshoot < 0) {
                         // Prioritize highest that goes under, then lowest that goes over.
-                        if (currBestOverhoot > 0 || overshoot > currBestOverhoot)
+                        if (currBestOverhoot > 0 || overshoot > currBestOverhoot) {
                             bestPotential = slot;
+                        }
                     } else if (overshoot > 0) {
                         // Prioritize the smaller overshoot.
-                        if (overshoot < currBestOverhoot)
+                        if (overshoot < currBestOverhoot) {
                             bestPotential = slot;
+                        }
                     } else if (currBestOverhoot != 0) {
                         // We have a "perfect" fit.
                         bestPotential = slot;

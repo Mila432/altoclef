@@ -52,6 +52,9 @@ public class EventBus {
             }
             // Delete all subscriptions
             lock = false;
+            if (!toDelete.isEmpty()) {
+                subscribers.removeAll(toDelete);
+            }
         }
     }
 

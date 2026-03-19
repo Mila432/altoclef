@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.CraftInInventoryTask;
 import adris.altoclef.tasks.ResourceTask;
@@ -30,7 +29,6 @@ public abstract class CraftWithMatchingMaterialsTask extends ResourceTask {
         int sameResourceRequiredCount = 0;
         ItemTarget sameResourceTarget = null;
         if (recipe.getSlotCount() != sameMask.length) {
-            Debug.logError("Invalid CraftWithMatchingMaterialsTask constructor parameters: Recipe size must equal \"sameMask\" size.");
         }
         for (int i = 0; i < recipe.getSlotCount(); ++i) {
             if (sameMask[i]) {
@@ -143,7 +141,6 @@ public abstract class CraftWithMatchingMaterialsTask extends ResourceTask {
     // Virtual
     // this should be implemented, if 'getExpectedTotalCountOfSameItem' is overwritten
     protected Task getSpecificSameResourceTask(AltoClef mod, Item[] toGet) {
-        Debug.logError("Uh oh!!! getSpecificSameResourceTask should be implemented!!!! Now we're stuck.");
         return null;
     }
 

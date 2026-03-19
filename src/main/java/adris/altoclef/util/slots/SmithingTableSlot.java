@@ -1,5 +1,6 @@
 package adris.altoclef.util.slots;
 
+
 public class SmithingTableSlot extends Slot {
     public static final SmithingTableSlot INPUT_SLOT_TEMPLATE = new SmithingTableSlot(0);
     public static final SmithingTableSlot INPUT_SLOT_TOOL = new SmithingTableSlot(1);
@@ -16,6 +17,8 @@ public class SmithingTableSlot extends Slot {
 
     @Override
     public int inventorySlotToWindowSlot(int inventorySlot) {
+        if (inventorySlot < 0 || inventorySlot > 35) {
+        }
         if (inventorySlot < 9) {
             return inventorySlot + 30;
         }
@@ -24,6 +27,8 @@ public class SmithingTableSlot extends Slot {
 
     @Override
     protected int windowSlotToInventorySlot(int windowSlot) {
+        if (windowSlot < 0 || windowSlot > 39) {
+        }
         if (windowSlot >= 30) {
             return windowSlot - 30;
         }

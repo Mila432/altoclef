@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.entity;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.time.TimerGame;
@@ -83,7 +82,6 @@ public class ShootArrowSimpleProjectileTask extends Task {
 
         if (!(mod.getItemStorage().hasItem(Items.BOW) &&
                 requiredArrows.stream().anyMatch(mod.getItemStorage()::hasItem))) {
-            Debug.logMessage("Missing items, stopping.");
             return null;
         }
 
@@ -107,7 +105,11 @@ public class ShootArrowSimpleProjectileTask extends Task {
             for (ArrowEntity arrow : arrows) {
                 if (arrow.getOwner() == mod.getPlayer()) {
                     Vec3d velocity = arrow.getVelocity();
-                    Vec3d delta = target.getPos().subtract(arrow.getPos());
+                    //#if MC >= 12111
+                    Vec3d delta = target.getEntityPos().subtract(arrow.getEntityPos());
+                    //#else
+                    //$$ Vec3d delta = target.getPos().subtract(arrow.getPos());
+                    //#endif
                     boolean isMovingTowardsTarget = velocity.dotProduct(delta) > 0;
                     if (isMovingTowardsTarget) {
                         return null;

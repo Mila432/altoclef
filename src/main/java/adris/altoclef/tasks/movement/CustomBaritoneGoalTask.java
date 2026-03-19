@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.control.InputControls;
 import adris.altoclef.multiversion.versionedfields.Blocks;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
@@ -65,11 +64,13 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
 
     private boolean isAnnoying(AltoClef mod, BlockPos pos) {
         for (Block AnnoyingBlocks : annoyingBlocks) {
-            return mod.getWorld().getBlockState(pos).getBlock() == AnnoyingBlocks ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof DoorBlock ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof FenceBlock ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof FenceGateBlock ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof FlowerBlock;
+            Block currentBlock = mod.getWorld().getBlockState(pos).getBlock();
+            boolean result = currentBlock == AnnoyingBlocks ||
+                    currentBlock instanceof DoorBlock ||
+                    currentBlock instanceof FenceBlock ||
+                    currentBlock instanceof FenceGateBlock ||
+                    currentBlock instanceof FlowerBlock;
+            return result;
         }
         return false;
     }
@@ -130,7 +131,9 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
                 controls.release(Input.MOVE_FORWARD);
             }
         }
-        if (unstuckTask != null && unstuckTask.isActive() && !unstuckTask.isFinished() && stuckInBlock(mod) != null) {
+        
+        BlockPos currentStuckBlock = stuckInBlock(mod);
+        if (unstuckTask != null && unstuckTask.isActive() && !unstuckTask.isFinished() && currentStuckBlock != null) {
             setDebugState("Getting unstuck from block.");
             stuckCheck.reset();
             // Stop other tasks, we are JUST shimmying
@@ -161,7 +164,6 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
                     return wanderTask;
                 }
                 if (!checker.check(mod)) {
-                    Debug.logMessage("Failed to make progress on goal, wandering.");
                     onWander(mod);
                     return wanderTask;
                 }

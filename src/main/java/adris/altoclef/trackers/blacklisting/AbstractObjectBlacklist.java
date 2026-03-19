@@ -1,7 +1,6 @@
 package adris.altoclef.trackers.blacklisting;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.util.MiningRequirement;
 import adris.altoclef.util.helpers.StorageHelper;
 import net.minecraft.util.math.Vec3d;
@@ -27,18 +26,20 @@ public abstract class AbstractObjectBlacklist<T> {
             entries.put(item, entry);
         }
         BlacklistEntry entry = entries.get(item);
-        double newDistance = getPos(item).squaredDistanceTo(mod.getPlayer().getPos());
+        //#if MC >= 12111
+        double newDistance = getPos(item).squaredDistanceTo(mod.getPlayer().getEntityPos());
+        //#else
+        //$$ double newDistance = getPos(item).squaredDistanceTo(mod.getPlayer().getPos());
+        //#endif
         MiningRequirement newTool = StorageHelper.getCurrentMiningRequirement();
         // For distance, add a slight threshold so it doesn't reset EVERY time we move a tiny bit closer.
         if (newTool.ordinal() > entry.bestTool.ordinal() || (newDistance < entry.bestDistanceSq - 1)) {
             if (newTool.ordinal() > entry.bestTool.ordinal()) entry.bestTool = newTool;
             if (newDistance < entry.bestDistanceSq) entry.bestDistanceSq = newDistance;
             entry.numberOfFailures = 0;
-            Debug.logMessage("Blacklist RESET: " + item.toString());
         }
         entry.numberOfFailures++;
         entry.numberOfFailuresAllowed = numberOfFailuresAllowed;
-        Debug.logMessage("Blacklist: " + item.toString() + ": Try " + entry.numberOfFailures + " / " + entry.numberOfFailuresAllowed);
     }
 
     protected abstract Vec3d getPos(T item);

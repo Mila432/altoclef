@@ -11,6 +11,10 @@ public class CollectWoodenStairsTask extends CraftWithMatchingPlanksTask {
 
     public CollectWoodenStairsTask(Item[] targets, ItemTarget planks, int count) {
         super(targets, woodItems -> woodItems.stairs, createRecipe(planks), new boolean[]{true, false, false, true, true, false, true, true, true}, count);
+        if (targets == null || targets.length == 0) {
+        }
+        if (planks == null) {
+        }
     }
 
     public CollectWoodenStairsTask(Item target, String plankCatalogueName, int count) {

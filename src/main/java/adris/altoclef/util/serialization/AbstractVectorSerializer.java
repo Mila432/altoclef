@@ -21,6 +21,10 @@ public abstract class AbstractVectorSerializer<T> extends StdSerializer<T> {
     @Override
     public void serialize(T value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         Collection<String> parts = getParts(value);
+        if (parts == null) {
+            gen.writeString("");
+            return;
+        }
         gen.writeString(String.join(",", parts));
     }
 }

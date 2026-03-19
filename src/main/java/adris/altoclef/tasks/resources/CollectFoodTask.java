@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.multiversion.item.ItemVer;
 import adris.altoclef.tasks.CraftInInventoryTask;
@@ -33,6 +32,7 @@ import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.SmokerScreenHandler;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 import java.util.Objects;
@@ -79,13 +79,17 @@ public class CollectFoodTask extends Task {
         if (count <= 0) return 0;
         for (CookableFoodTarget cookable : COOKABLE_FOODS) {
             if (food.getItem() == cookable.getRaw()) {
-                assert ItemVer.getFoodComponent(cookable.getCooked()) != null;
+                if (ItemVer.getFoodComponent(cookable.getCooked()) == null) {
+                    return 0;
+                }
                 return count * ItemVer.getFoodComponent(cookable.getCooked()).getHunger();
             }
         }
 
         //bread logic
-        assert ItemVer.getFoodComponent( Items.BREAD) != null;
+        if (ItemVer.getFoodComponent( Items.BREAD) == null) {
+            return 0;
+        }
 
         if (food.getItem().equals(Items.HAY_BLOCK)) {
             return 3* ItemVer.getFoodComponent(Items.BREAD).getHunger()*count;
@@ -96,7 +100,9 @@ public class CollectFoodTask extends Task {
 
         // We're just an ordinary item.
         if (ItemVer.isFood(food.getItem())) {
-            assert ItemVer.getFoodComponent(food.getItem()) != null;
+            if (ItemVer.getFoodComponent(food.getItem()) == null) {
+                return 0;
+            }
             return count * ItemVer.getFoodComponent(food.getItem()).getHunger();
         }
         return 0;
@@ -110,6 +116,9 @@ public class CollectFoodTask extends Task {
             potentialFood += getFoodPotential(food);
         }
         int potentialBread = (int) (mod.getItemStorage().getItemCount(Items.WHEAT) / 3) + mod.getItemStorage().getItemCount(Items.HAY_BLOCK) * 3;
+        if (ItemVer.getFoodComponent( Items.BREAD) == null) {
+            return potentialFood;
+        }
         potentialFood += Objects.requireNonNull(ItemVer.getFoodComponent( Items.BREAD)).getHunger() * potentialBread;
         // Check smelting
         ScreenHandler screen = mod.getPlayer().currentScreenHandler;
@@ -148,7 +157,6 @@ public class CollectFoodTask extends Task {
         for (BlockPos HaysPos : haysPos) {
             BlockPos haysUpPos = HaysPos.up();
             if (mod.getWorld().getBlockState(haysUpPos).getBlock() == Blocks.CARVED_PUMPKIN) {
-                Debug.logMessage("Blacklisting pillage hay bales.");
                 mod.getBlockScanner().requestBlockUnreachable(HaysPos, 0);
             }
         }
@@ -267,8 +275,14 @@ public class CollectFoodTask extends Task {
 
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
                 if (!mod.getEntityTracker().entityFound(cookable.mobToKill)) continue;
-                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),notBaby ,cookable.mobToKill);
-                if (nearest.isEmpty()) continue; // ?? This crashed once?
+                //#if MC >= 12111
+                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getEntityPos(), notBaby, cookable.mobToKill);
+                //#else
+                //$$ Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), notBaby, cookable.mobToKill);
+                //#endif
+                if (nearest.isEmpty()) {
+                    continue;
+                }
                 int hungerPerformance = cookable.getCookedUnits();
                 double sqDistance = nearest.get().squaredDistanceTo(mod.getPlayer());
                 double score = (double) 100 * hungerPerformance / (sqDistance);
@@ -310,7 +324,6 @@ public class CollectFoodTask extends Task {
                     if (entity instanceof HostileEntity || entity instanceof SlimeEntity) {
                         if (chickens.get().hasPassenger(entity)) {
                             if (mod.getEntityTracker().isEntityReachable(entity)) {
-                                Debug.logMessage("Blacklisting chicken jockey.");
                                 mod.getEntityTracker().requestEntityUnreachable(chickens.get());
                             }
                         }
@@ -352,15 +365,29 @@ public class CollectFoodTask extends Task {
             if (!WorldHelper.canBreak(blockPos)) return false;
             return accept.test(blockPos);
         };
-        Optional<BlockPos> nearestBlock = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), acceptPlus, blockToCheck);
+        //#if MC >= 12111
+        Optional<BlockPos> nearestBlock = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getEntityPos(), acceptPlus, blockToCheck);
+        //#else
+        //$$ Optional<BlockPos> nearestBlock = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), acceptPlus, blockToCheck);
+        //#endif
 
-        if (nearestBlock.isPresent() && !nearestBlock.get().isWithinDistance(mod.getPlayer().getPos(), maxRange)) {
+        if (nearestBlock.isPresent() && !nearestBlock.get().isWithinDistance(
+                //#if MC >= 12111
+                mod.getPlayer().getEntityPos()
+                //#else
+                //$$ mod.getPlayer().getPos()
+                //#endif
+                , maxRange)) {
             nearestBlock = Optional.empty();
         }
 
         Optional<ItemEntity> nearestDrop = Optional.empty();
         if (mod.getEntityTracker().itemDropped(itemToGrab)) {
-            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#if MC >= 12111
+            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getEntityPos(), itemToGrab);
+            //#else
+            //$$ nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#endif
         }
 
         if (nearestDrop.isPresent()) {
@@ -388,7 +415,11 @@ public class CollectFoodTask extends Task {
     private Task pickupTaskOrNull(AltoClef mod, Item itemToGrab, double maxRange) {
         Optional<ItemEntity> nearestDrop = Optional.empty();
         if (mod.getEntityTracker().itemDropped(itemToGrab)) {
-            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#if MC >= 12111
+            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getEntityPos(), itemToGrab);
+            //#else
+            //$$ nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#endif
         }
         if (nearestDrop.isPresent()) {
             if (nearestDrop.get().isInRange(mod.getPlayer(), maxRange)) {
@@ -409,12 +440,14 @@ public class CollectFoodTask extends Task {
                             } else if (itemToGrab.equals(Items.WHEAT)) {
                                 hunger += ItemVer.getFoodComponent(Items.BREAD).getHunger()/3d;
                             } else {
-                                mod.log("unknown food item: "+itemToGrab);
                             }
                             int groundCost = (int) (hunger * nearestDrop.get().getStack().getCount());
 
-                            if (inventoryCost > groundCost) return null;
+                            if (inventoryCost > groundCost) {
+                                return null;
+                            }
                         }
+                    } else {
                     }
                 }
                 return new PickupDroppedItemTask(new ItemTarget(itemToGrab), true);
@@ -452,7 +485,9 @@ public class CollectFoodTask extends Task {
         }
 
         public int getCookedUnits() {
-            assert ItemVer.getFoodComponent(getCooked()) != null;
+            if (ItemVer.getFoodComponent(getCooked()) == null) {
+                return 0;
+            }
             return ItemVer.getFoodComponent(getCooked()).getHunger();
         }
 

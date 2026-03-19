@@ -53,7 +53,8 @@ public class SafeNetherPortalTask extends Task {
                 BlockPos pos1 = mod.getPlayer().getSteppingPos().offset(axis, 1);
                 BlockPos pos2 = mod.getPlayer().getSteppingPos().offset(axis, -1);
 
-                if (mod.getWorld().getBlockState(pos1).isAir() || mod.getWorld().getBlockState(pos1).getBlock().equals(Blocks.SOUL_SAND)) {
+                boolean pos1SafeOrSoul = mod.getWorld().getBlockState(pos1).isAir() || mod.getWorld().getBlockState(pos1).getBlock().equals(Blocks.SOUL_SAND);
+                if (pos1SafeOrSoul) {
                     boolean passed = false;
                     for (Direction dir : Direction.values()) {
                         if (mod.getWorld().getBlockState(pos1.up().offset(dir)).getBlock().equals(Blocks.NETHER_PORTAL)) {
@@ -66,7 +67,8 @@ public class SafeNetherPortalTask extends Task {
                     }
                 }
 
-                if (mod.getWorld().getBlockState(pos2).isAir() || mod.getWorld().getBlockState(pos2).getBlock().equals(Blocks.SOUL_SAND)) {
+                boolean pos2SafeOrSoul = mod.getWorld().getBlockState(pos2).isAir() || mod.getWorld().getBlockState(pos2).getBlock().equals(Blocks.SOUL_SAND);
+                if (pos2SafeOrSoul) {
                     boolean passed = false;
                     for (Direction dir : Direction.values()) {
                         if (mod.getWorld().getBlockState(pos2.up().offset(dir)).getBlock().equals(Blocks.NETHER_PORTAL)) {
@@ -114,7 +116,9 @@ public class SafeNetherPortalTask extends Task {
             for (BlockPos pos : positions) {
                 for (Direction dir : directions) {
                     BlockPos newPos = pos.down().offset(dir);
-                    if (mod.getWorld().getBlockState(newPos).isAir() || mod.getWorld().getBlockState(newPos).getBlock().equals(Blocks.SOUL_SAND)) {
+                    boolean isAir = mod.getWorld().getBlockState(newPos).isAir();
+                    boolean isSoulSand = mod.getWorld().getBlockState(newPos).getBlock().equals(Blocks.SOUL_SAND);
+                    if (isAir || isSoulSand) {
                         setDebugState("Changing block...");
                         return new ReplaceSafeBlock(newPos);
                     }
@@ -183,11 +187,24 @@ public class SafeNetherPortalTask extends Task {
             if (mod.getWorld().getBlockState(pos).getBlock().equals(Blocks.SOUL_SAND)) {
                 LookHelper.lookAt(mod, pos);
 
-                HitResult result = mod.getPlayer().raycast(3, MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(true), true);
-                if (result instanceof BlockHitResult blockHitResult && mod.getWorld().getBlockState(blockHitResult.getBlockPos()).getBlock().equals(Blocks.NETHER_PORTAL)) {
-                    setDebugState("Getting closer to target...");
-                    mod.getInputControls().hold(Input.MOVE_FORWARD);
-                    mod.getInputControls().hold(Input.SNEAK);
+                //#if MC >= 12100
+                float tickDelta = MinecraftClient.getInstance().getRenderTickCounter().getTickProgress(true);
+                //#else
+                //$$ float tickDelta = MinecraftClient.getInstance().getTickDelta();
+                //#endif
+                HitResult result = mod.getPlayer().raycast(3, tickDelta, true);
+                if (result instanceof BlockHitResult blockHitResult) {
+                    boolean hitPortal = mod.getWorld().getBlockState(blockHitResult.getBlockPos()).getBlock().equals(Blocks.NETHER_PORTAL);
+                    if (hitPortal) {
+                        setDebugState("Getting closer to target...");
+                        mod.getInputControls().hold(Input.MOVE_FORWARD);
+                        mod.getInputControls().hold(Input.SNEAK);
+                    } else {
+                        setDebugState("Breaking block");
+                        mod.getInputControls().release(Input.MOVE_FORWARD);
+                        mod.getInputControls().release(Input.SNEAK);
+                        mod.getInputControls().hold(Input.CLICK_LEFT);
+                    }
                 } else {
                     setDebugState("Breaking block");
                     mod.getInputControls().release(Input.MOVE_FORWARD);

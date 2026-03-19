@@ -1,7 +1,6 @@
 package adris.altoclef.util.helpers;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.util.slots.Slot;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.IPlayerContext;
@@ -194,6 +193,9 @@ public interface LookHelper {
     static boolean cleanLineOfSight(Vec3d end, double maxRange) {
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
         PlayerEntity playerEntity = minecraftClient.player;
+        if (playerEntity == null) {
+            return false;
+        }
         return cleanLineOfSight(playerEntity, end, maxRange);
     }
 
@@ -221,12 +223,18 @@ public interface LookHelper {
                 case MISS ->
                     // Missed the target, clear line of sight
                         true;
-                case BLOCK ->
-                    // Hit a block, check if it's the same as the target block
-                        hitResult.getBlockPos().equals(block);
+                case BLOCK -> {
+                    boolean matches = hitResult.getBlockPos().equals(block);
+                    if (!matches) {
+                    }
+                    yield matches;
+                }
                 case ENTITY ->
                     // Hit an entity, line of sight blocked
                         false;
+                default -> {
+                    yield false;
+                }
             };
         }
     }
@@ -240,7 +248,9 @@ public interface LookHelper {
      */
     static Vec3d toVec3d(Rotation rotation) throws NullPointerException {
         // make sure rotation is not null
-        Objects.requireNonNull(rotation, "Rotation cannot be null");
+        if (rotation == null) {
+            throw new NullPointerException("Rotation cannot be null");
+        }
 
         // calculate the look direction from the rotation
         return calcLookDirectionFromRotation(rotation);
@@ -276,7 +286,11 @@ public interface LookHelper {
         }
 
         // Get the world of the entity
-        World world = entity.getWorld();
+        //#if MC >= 12111
+        World world = entity.getEntityWorld();
+        //#else
+        //$$ World world = entity.getWorld();
+        //#endif
 
         // Create a raycast context with the start and end points, shape type, fluid handling, and entity performing the raycast
         RaycastContext context = new RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
@@ -473,14 +487,20 @@ public interface LookHelper {
             // Get the block position from the crosshair target
             Vec3i resultGetPosOrigin = new Vec3i((int) result.getPos().getX(), (int) result.getPos().getY(), (int) result.getPos().getZ());
             // Check if the block is an interactable block
-            return WorldHelper.isInteractableBlock(new BlockPos(resultGetPosOrigin));
+            boolean isInteractable = WorldHelper.isInteractableBlock(new BlockPos(resultGetPosOrigin));
+            if (isInteractable) {
+            }
+            return isInteractable;
         }
         // Check if the crosshair target is an entity
         else if (result.getType() == HitResult.Type.ENTITY && result instanceof EntityHitResult) {
             // Get the entity from the crosshair target
             Entity entity = ((EntityHitResult) result).getEntity();
             // Check if the entity is a merchant
-            return entity instanceof MerchantEntity;
+            boolean isMerchant = entity instanceof MerchantEntity;
+            if (isMerchant) {
+            }
+            return isMerchant;
         }
 
         return false;
@@ -548,10 +568,18 @@ public interface LookHelper {
      */
     static void lookAt(Rotation rotation) {
         // Update the target rotation in the LookBehavior
-        AltoClef.getInstance().getClientBaritone().getLookBehavior().updateTarget(rotation, true);
+        AltoClef instance = AltoClef.getInstance();
+        if (instance == null) {
+            return;
+        }
+        
+        instance.getClientBaritone().getLookBehavior().updateTarget(rotation, true);
 
         // Set the player's yaw and pitch
-        ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
+        ClientPlayerEntity player = instance.getPlayer();
+        if (player == null) {
+            return;
+        }
 
         player.setYaw(rotation.getYaw());
         player.setPitch(rotation.getPitch());
@@ -566,8 +594,11 @@ public interface LookHelper {
      * @throws IllegalArgumentException if mod or toLook is null.
      */
     static void lookAt(AltoClef mod, Vec3d toLook, boolean withBaritone) {
-        if (mod == null || toLook == null) {
-            throw new IllegalArgumentException("mod and toLook cannot be null");
+        if (mod == null) {
+            throw new IllegalArgumentException("mod cannot be null");
+        }
+        if (toLook == null) {
+            throw new IllegalArgumentException("toLook cannot be null");
         }
 
         Rotation targetRotation = getLookRotation(mod, toLook);
@@ -582,8 +613,11 @@ public interface LookHelper {
      * @throws IllegalArgumentException if mod or toLook is null.
      */
     static void lookAt(AltoClef mod, Vec3d toLook) {
-        if (mod == null || toLook == null) {
-            throw new IllegalArgumentException("mod and toLook cannot be null");
+        if (mod == null) {
+            throw new IllegalArgumentException("mod cannot be null");
+        }
+        if (toLook == null) {
+            throw new IllegalArgumentException("toLook cannot be null");
         }
 
         Rotation targetRotation = getLookRotation(mod, toLook);

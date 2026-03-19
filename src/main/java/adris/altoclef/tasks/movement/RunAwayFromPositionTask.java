@@ -22,17 +22,24 @@ public class RunAwayFromPositionTask extends CustomBaritoneGoalTask {
         _distance = distance;
         _dangerBlocks = toRunAwayFrom;
         _maintainY = maintainY;
+        if (toRunAwayFrom == null || toRunAwayFrom.length == 0) {
+        }
     }
 
     @Override
     protected Goal newGoal(AltoClef mod) {
+        if (_dangerBlocks == null || _dangerBlocks.length == 0) {
+        }
         return new GoalRunAway(_distance, _maintainY, _dangerBlocks);
     }
 
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof RunAwayFromPositionTask task) {
-            return Arrays.equals(task._dangerBlocks, _dangerBlocks);
+            boolean arraysEqual = Arrays.equals(task._dangerBlocks, _dangerBlocks);
+            if (!arraysEqual) {
+            }
+            return arraysEqual;
         }
         return false;
     }

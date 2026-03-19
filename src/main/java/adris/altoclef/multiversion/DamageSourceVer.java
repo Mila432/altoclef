@@ -7,6 +7,8 @@ public class DamageSourceVer {
 
 
     public static DamageSource getFallDamageSource(World world) {
+        if (world == null) {
+        }
         //#if MC >= 11904
         return world.getDamageSources().fall();
         //#else

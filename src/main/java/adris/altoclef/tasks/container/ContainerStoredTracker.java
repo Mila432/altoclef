@@ -67,10 +67,11 @@ public class ContainerStoredTracker {
     }
 
     public ItemTarget[] getUnstoredItemTargetsYouCanStore(AltoClef mod, ItemTarget[] toStore) {
-        return Arrays.stream(toStore)
+        ItemTarget[] result = Arrays.stream(toStore)
                 .filter(target -> !matches(target) && mod.getItemStorage().hasItem(target.getMatches()))
                 // If we don't have enough, reduce the count to what we CAN add
                 .map(target -> mod.getItemStorage().getItemCount(target) < target.getTargetCount() ? new ItemTarget(target, mod.getItemStorage().getItemCount(target)) : target)
                 .toArray(ItemTarget[]::new);
+        return result;
     }
 }

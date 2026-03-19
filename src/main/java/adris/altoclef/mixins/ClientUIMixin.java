@@ -18,10 +18,14 @@ public final class ClientUIMixin {
             method = "render",
             at = @At("TAIL")
     )
-    //#if MC >= 12100
+    //#if MC >= 12111
     private void clientRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        EventBus.publish(new ClientRenderEvent(DrawContextWrapper.of(context), tickCounter.getTickDelta(true)));
+        EventBus.publish(new ClientRenderEvent(DrawContextWrapper.of(context), tickCounter.getTickProgress(true)));
     }
+    //#elseif MC >= 12100
+    //$$ private void clientRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+    //$$     EventBus.publish(new ClientRenderEvent(DrawContextWrapper.of(context), tickCounter.getTickDelta(true)));
+    //$$ }
     //#else
     //#if MC >= 12001
     //$$ private void clientRender(DrawContext obj, float tickDelta, CallbackInfo ci) {

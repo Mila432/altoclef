@@ -43,11 +43,14 @@ public class CollectHoneycombTask extends ResourceTask {
     protected Task onResourceTick(AltoClef mod) {
         if (nest == null) {
             Optional<BlockPos> getNearestNest = mod.getBlockScanner().getNearestBlock(Blocks.BEE_NEST);
-            if (getNearestNest.isPresent()) nest = getNearestNest.get();
+            if (getNearestNest.isPresent()) {
+                nest = getNearestNest.get();
+            }
         }
         // If we are STILL null
         if (nest == null) {
-            if (campfire && !mod.getItemStorage().hasItemInventoryOnly(Items.CAMPFIRE)) {
+            boolean hasCampfire = mod.getItemStorage().hasItemInventoryOnly(Items.CAMPFIRE);
+            if (campfire && !hasCampfire) {
                 // May as well get a campfire
                 setDebugState("Can't find nest, getting campfire first...");
                 return new CataloguedResourceTask(new ItemTarget(Items.CAMPFIRE, 1));
@@ -55,8 +58,10 @@ public class CollectHoneycombTask extends ResourceTask {
             setDebugState("Alright, we're searching");
             return new SearchChunkForBlockTask(Blocks.BEE_NEST);
         }
-        if (campfire && !isCampfireUnderNest(mod, nest)) {
-            if (!mod.getItemStorage().hasItemInventoryOnly(Items.CAMPFIRE)) {
+        boolean hasCampfire = mod.getItemStorage().hasItemInventoryOnly(Items.CAMPFIRE);
+        boolean campfireUnderNest = isCampfireUnderNest(mod, nest);
+        if (campfire && !campfireUnderNest) {
+            if (!hasCampfire) {
                 setDebugState("Getting a campfire");
                 return new CataloguedResourceTask(new ItemTarget(Items.CAMPFIRE, 1));
             }
@@ -67,8 +72,14 @@ public class CollectHoneycombTask extends ResourceTask {
             setDebugState("Getting shears");
             return new CataloguedResourceTask(new ItemTarget(Items.SHEARS, 1));
         }
-        if (mod.getWorld().getBlockState(nest).get(Properties.HONEY_LEVEL) != 5) {
-            if (!nest.isWithinDistance(mod.getPlayer().getPos(), 20)) {
+        int honeyLevel = mod.getWorld().getBlockState(nest).get(Properties.HONEY_LEVEL);
+        if (honeyLevel != 5) {
+            //#if MC >= 12111
+            boolean withinDistance = nest.isWithinDistance(mod.getPlayer().getEntityPos(), 20);
+            if (!withinDistance) {
+            //#else
+            //$$ if (!nest.isWithinDistance(mod.getPlayer().getPos(), 20)) {
+            //#endif
                 setDebugState("Getting close to nest");
                 return new GetCloseToBlockTask(nest);
             }

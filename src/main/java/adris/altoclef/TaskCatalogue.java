@@ -47,6 +47,7 @@ public class TaskCatalogue {
     static {
         /// DEFINE RESOURCE TASKS HERE
         {
+            
             String p = "planks";
             String s = "stick";
             String o = null;
@@ -54,7 +55,11 @@ public class TaskCatalogue {
             /// RAW RESOURCES
             mine("log", MiningRequirement.HAND, ItemHelper.LOG, ItemHelper.LOG).anyDimension();
             woodTasks("log", wood -> wood.log, (wood, count) -> new MineAndCollectTask(wood.log, count, new Block[]{Block.getBlockFromItem(wood.log)}, MiningRequirement.HAND), true);
+            //#if MC >= 11700
             mine("dirt", MiningRequirement.HAND, new Block[]{Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.DIRT_PATH}, Items.DIRT);
+            //#else
+            //$$ mine("dirt", MiningRequirement.HAND, new Block[]{Blocks.DIRT, Blocks.GRASS_BLOCK, net.minecraft.block.Blocks.GRASS_PATH}, Items.DIRT);
+            //#endif
             simple("cobblestone", Items.COBBLESTONE, CollectBlockByOneTask.CollectCobblestoneTask::new).dontMineIfPresent();
             simple("cobbled_deepslate", Items.COBBLED_DEEPSLATE, CollectBlockByOneTask.CollectCobbledDeepslateTask::new).dontMineIfPresent();
             mine("andesite", MiningRequirement.WOOD, Blocks.ANDESITE, Items.ANDESITE);
@@ -257,8 +262,6 @@ public class TaskCatalogue {
             shapedRecipe2x2("sugar", Items.SUGAR, 1, "sugar_cane", o, o, o);
             shapedRecipe2x2("bone_meal", Items.BONE_MEAL, 3, "bone", o, o, o);
             shapedRecipe2x2("melon_seeds", Items.MELON_SEEDS, 1, "melon_slice", o, o, o);
-            shapedRecipe2x2("bamboo_planks", Items.BAMBOO_PLANKS, 2, "bamboo_block", o, o, o);
-            shapedRecipe3x3Block("bamboo_block", Items.BAMBOO_BLOCK, "bamboo");
             simple("hay_block", Items.HAY_BLOCK, CollectHayBlockTask::new).dontMineIfPresent();
             shapedRecipe2x2Block("polished_andesite", Items.POLISHED_ANDESITE, 4, "andesite");
             shapedRecipe2x2Block("polished_diorite", Items.POLISHED_DIORITE, 4, "diorite");
@@ -533,7 +536,11 @@ public class TaskCatalogue {
                 String i = "iron_nugget";
                 shapedRecipe3x3("lantern", Items.LANTERN, 1, i, i, i, i, "torch", i, i, i, i);
                 shapedRecipe3x3("soul_lantern", Items.SOUL_LANTERN, 1, i, i, i, i, "soul_torch", i, i, i, i);
-                shapedRecipe3x3("chain", Items.CHAIN, 1, o, i, o, o, "iron_ingot", o, o, i, o);
+                //#if MC >= 12111
+                shapedRecipe3x3("chain", Items.IRON_CHAIN, 1, o, i, o, o, "iron_ingot", o, o, i, o);
+                //#else
+                //$$ shapedRecipe3x3("chain", Items.CHAIN, 1, o, i, o, o, "iron_ingot", o, o, i, o);
+                //#endif
             }
             {
                 String c = "chiseled_stone_bricks";
@@ -636,6 +643,7 @@ public class TaskCatalogue {
                 String b = "beetroot";
                 shapedRecipe3x3("beetroot_soup", Items.BEETROOT_SOUP, 1, b, b, b, b, b, b, o, "bowl", o);
             }
+            
         }
     }
 
@@ -647,6 +655,10 @@ public class TaskCatalogue {
             }
         }
         matches = supportedMatches.toArray(new Item[0]);
+        
+        // Log if all items were unsupported
+        if (matches.length == 0) {
+        }
 
         CataloguedResource result = new CataloguedResource(matches, getTask);
         Block[] blocks = ItemHelper.itemsToBlocks(matches);
@@ -696,7 +708,6 @@ public class TaskCatalogue {
     public static ResourceTask getItemTask(String name, int count) {
 
         if (!taskExists(name)) {
-            Debug.logWarning("Task " + name + " does not exist. Error possibly.");
             Debug.logStack();
             return null;
         }
@@ -706,7 +717,6 @@ public class TaskCatalogue {
 
     public static ResourceTask getItemTask(Item item, int count) {
         if (!taskExists(item)) {
-            Debug.logWarning("Task " + item + " does not exist. Error possibly.");
             Debug.logStack();
             return null;
         }
@@ -869,7 +879,9 @@ public class TaskCatalogue {
             ItemHelper.WoodItems woodItems = ItemHelper.getWoodItems(woodType);
             Item match = getMatch.apply(woodItems);
             String cataloguedName = getCatalogueName.apply(woodItems);
-            if (match == null) continue;
+            if (match == null) {
+                continue;
+            }
             boolean isNether = woodItems.isNetherWood();
             CataloguedResource t = put(cataloguedName, new Item[]{match}, count -> getTask.apply(woodItems, count));
             if (requireNetherForNetherStuff && isNether) {
@@ -912,7 +924,6 @@ public class TaskCatalogue {
 
     private static void alias(String newName, String original) {
         if (!nameToResourceTask.containsKey(original) || !nameToItemMatches.containsKey(original)) {
-            Debug.logWarning("Invalid resource: " + original + ". Will not create alias.");
         } else {
             nameToResourceTask.put(newName, nameToResourceTask.get(original));
             nameToItemMatches.put(newName, nameToItemMatches.get(original));

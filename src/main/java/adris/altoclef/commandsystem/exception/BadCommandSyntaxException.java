@@ -1,5 +1,6 @@
 package adris.altoclef.commandsystem.exception;
 
+
 public class BadCommandSyntaxException extends CommandException {
 
     public BadCommandSyntaxException(String message) {

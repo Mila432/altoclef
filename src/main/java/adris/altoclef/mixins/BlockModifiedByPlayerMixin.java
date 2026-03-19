@@ -28,7 +28,11 @@ public class BlockModifiedByPlayerMixin {
     //#else
     //$$ public void onBlockBroken(World world, BlockPos pos, BlockState state, PlayerEntity player, CallbackInfo ci) {
     //#endif
-        if (player.getWorld() == world) {
+        //#if MC >= 12111
+        if (player.getEntityWorld() == world) {
+        //#else
+        //$$ if (player.getWorld() == world) {
+        //#endif
             BlockBrokenEvent evt = new BlockBrokenEvent();
             evt.blockPos = pos;
             evt.blockState = state;

@@ -1,5 +1,6 @@
 package adris.altoclef.commandsystem.exception;
 
+
 public class RuntimeCommandException extends CommandException {
     public RuntimeCommandException(String message) {
         super(message);

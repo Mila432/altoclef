@@ -39,6 +39,8 @@ public class MovementProgressChecker {
 
         if (mod.getControllerExtras().isBreakingBlock()) {
             BlockPos breakBlock = mod.getControllerExtras().getBreakingBlockPos();
+            if (breakBlock == null) {
+            }
             // If we broke a block, we made progress.
             // We must also delay reseting the distance checker UNTIL we break a block.
             // Because otherwise we risk not failing if we keep retrtying to mine and don't succeed.
@@ -48,11 +50,23 @@ public class MovementProgressChecker {
             }
             lastBreakingBlock = breakBlock;
             mineChecker.setProgress(mod.getControllerExtras().getBreakingBlockProgress());
-            return !mineChecker.failed();
+            boolean mineCheckerFailed = mineChecker.failed();
+            return !mineCheckerFailed;
         } else {
             mineChecker.reset();
-            distanceChecker.setProgress(mod.getPlayer().getPos());
-            return !distanceChecker.failed();
+            if (mod.getPlayer() == null) {
+                return false;
+            }
+            Vec3d playerPos = mod.getPlayer()
+            //#if MC >= 12111
+            .getEntityPos()
+            //#else
+            //$$ .getPos()
+            //#endif
+            ;
+            distanceChecker.setProgress(playerPos);
+            boolean distanceCheckerFailed = distanceChecker.failed();
+            return !distanceCheckerFailed;
         }
     }
 

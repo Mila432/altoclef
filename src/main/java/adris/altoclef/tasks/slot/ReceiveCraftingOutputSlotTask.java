@@ -62,6 +62,7 @@ public class ReceiveCraftingOutputSlotTask extends Task implements ITaskUsesCraf
         int craftCount = inOutput.getCount() * getCraftMultipleCount(mod);
         int weWantToAddToInventory = _toTake - mod.getItemStorage().getItemCountInventoryOnly(inOutput.getItem());
         boolean takeAll = weWantToAddToInventory >= craftCount;
+        
         if (takeAll && mod.getItemStorage().getSlotThatCanFitInPlayerInventory(inOutput, true).isPresent()) {
             setDebugState("Quick moving output");
             mod.getSlotHandler().clickSlot(_slot, 0, SlotActionType.QUICK_MOVE);

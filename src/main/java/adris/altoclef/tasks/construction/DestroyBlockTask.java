@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.construction;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.RunAwayFromPositionTask;
 import adris.altoclef.tasks.movement.SafeRandomShimmyTask;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
@@ -254,8 +253,11 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
             Iterable<Entity> entities = mod.getWorld().getEntities();
             for (Entity entity : entities) {
                 // Check if the entity is a PillagerEntity and is within a distance of 144 blocks from the position
-                if (entity instanceof PillagerEntity && pos.isWithinDistance(entity.getPos(), 144)) {
-                    Debug.logMessage("Blacklisting pillager wool.");
+                //#if MC >= 12111
+                if (entity instanceof PillagerEntity && pos.getSquaredDistance(entity.getEntityPos()) < 144 * 144) {
+                //#else
+                //$$ if (entity instanceof PillagerEntity && pos.isWithinDistance(entity.getPos(), 144)) {
+                //#endif
                     // Request the block at the position to be marked as unreachable
                     mod.getBlockScanner().requestBlockUnreachable(pos, 0);
                 }
@@ -297,7 +299,9 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
         }
 
         // Check if the move checker or the stuck check failed
-        if (!_moveChecker.check(mod) || !stuckCheck.check(mod)) {
+        boolean moveCheckPassed = _moveChecker.check(mod);
+        boolean stuckCheckPassed = stuckCheck.check(mod);
+        if (!moveCheckPassed || !stuckCheckPassed) {
             BlockPos blockStuck = stuckInBlock(mod);
             if (blockStuck != null) {
                 unstuckTask = getFenceUnstuckTask();
@@ -315,7 +319,11 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
 
         // Check if the block above the position is not solid, the player is above the position,
         // and the player is within a distance of 0.89 blocks from the position
-        if (!WorldHelper.isSolidBlock(pos.up()) && mod.getPlayer().getPos().y > pos.getY() && pos.isWithinDistance(mod.getPlayer().isOnGround() ? mod.getPlayer().getPos() : mod.getPlayer().getPos().add(0, -1, 0), 0.89)) {
+        //#if MC >= 12111
+        if (!WorldHelper.isSolidBlock(pos.up()) && mod.getPlayer().getEntityPos().y > pos.getY() && pos.getSquaredDistance(mod.getPlayer().isOnGround() ? mod.getPlayer().getEntityPos() : mod.getPlayer().getEntityPos().add(0, -1, 0)) < 0.89 * 0.89) {
+        //#else
+        //$$ if (!WorldHelper.isSolidBlock(pos.up()) && mod.getPlayer().getPos().y > pos.getY() && pos.isWithinDistance(mod.getPlayer().isOnGround() ? mod.getPlayer().getPos() : mod.getPlayer().getPos().add(0, -1, 0), 0.89)) {
+        //#endif
             if (WorldHelper.dangerousToBreakIfRightAbove(pos)) {
                 setDebugState("It's dangerous to break as we're right above it, moving away and trying again.");
                 return new RunAwayFromPositionTask(3, pos.getY(), pos);
@@ -326,12 +334,15 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
         if (reach.isPresent() && (mod.getPlayer().isTouchingWater() || mod.getPlayer().isOnGround()) && !mod.getFoodChain().needsToEat() && !WorldHelper.isInNetherPortal() && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
             setDebugState("Block in range, mining...");
             stuckCheck.reset();
+            if (!isMining) {
+            }
             isMining = true;
             mod.getInputControls().release(Input.SNEAK);
             mod.getInputControls().release(Input.MOVE_BACK);
             mod.getInputControls().release(Input.MOVE_FORWARD);
             mod.getClientBaritone().getCustomGoalProcess().onLostControl();
             mod.getClientBaritone().getBuilderProcess().onLostControl();
+            mod.getClientBaritone().getPathingBehavior().forceCancel();
             if (!LookHelper.isLookingAt(mod, reach.get())) {
                 LookHelper.lookAt(reach.get());
             }
@@ -347,7 +358,13 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
             } else {
                 isMining = false;
             }
-            boolean isCloseToMoveBack = pos.isWithinDistance(mod.getPlayer().getPos(), 2);
+            if (reach.isPresent()) {
+            }
+            //#if MC >= 12111
+            boolean isCloseToMoveBack = pos.getSquaredDistance(mod.getPlayer().getEntityPos()) < 2 * 2;
+            //#else
+            //$$ boolean isCloseToMoveBack = pos.isWithinDistance(mod.getPlayer().getPos(), 2);
+            //#endif
             if (isCloseToMoveBack) {
                 if (!mod.getClientBaritone().getPathingBehavior().isPathing() && !mod.getPlayer().isTouchingWater() &&
                         !mod.getFoodChain().needsToEat()) {

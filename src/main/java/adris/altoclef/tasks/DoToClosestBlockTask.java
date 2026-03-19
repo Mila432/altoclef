@@ -57,7 +57,8 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
         if (getClosest != null) {
             return getClosest.apply(pos);
         }
-        return mod.getBlockScanner().getNearestBlock(pos, isValid, targetBlocks);
+        Optional<BlockPos> result = mod.getBlockScanner().getNearestBlock(pos, isValid, targetBlocks);
+        return result;
     }
 
     @Override
@@ -65,7 +66,12 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
         if (getOriginPos != null) {
             return getOriginPos.get();
         }
-        return mod.getPlayer().getPos();
+        //#if MC >= 12111
+        return mod.getPlayer().getEntityPos();
+        //#else
+        //$$ Debug.logMessage("Using player pos as origin");
+        //$$ return mod.getPlayer().getPos();
+        //#endif
     }
 
     @Override
@@ -76,21 +82,24 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
     @Override
     protected boolean isValid(AltoClef mod, BlockPos obj) {
         // Assume we're valid since we're in the same chunk.
-        if (!mod.getChunkTracker().isChunkLoaded(obj)) return true;
+        if (!mod.getChunkTracker().isChunkLoaded(obj)) {
+            return true;
+        }
         // Our valid predicate
-        if (isValid != null && !isValid.test(obj)) return false;
+        if (isValid != null && !isValid.test(obj)) {
+            return false;
+        }
         // Correct block
-        return mod.getBlockScanner().isBlockAtPosition(obj, targetBlocks);
+        boolean isCorrectBlock = mod.getBlockScanner().isBlockAtPosition(obj, targetBlocks);
+        return isCorrectBlock;
     }
 
     @Override
     protected void onStart() {
-
     }
 
     @Override
     protected void onStop(Task interruptTask) {
-
     }
 
     @Override

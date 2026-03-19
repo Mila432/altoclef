@@ -27,8 +27,9 @@ public class EnterNetherPortalTask extends Task {
     private boolean leftPortal;
 
     public EnterNetherPortalTask(Task getPortalTask, Dimension targetDimension, Predicate<BlockPos> goodPortal) {
-        if (targetDimension == Dimension.END)
+        if (targetDimension == Dimension.END) {
             throw new IllegalArgumentException("Can't build a nether portal to the end.");
+        }
         this.getPortalTask = getPortalTask;
         this.targetDimension = targetDimension;
         this.goodPortal = goodPortal;
@@ -65,7 +66,6 @@ public class EnterNetherPortalTask extends Task {
         }
 
         if (mod.getWorld().getBlockState(mod.getPlayer().getBlockPos()).getBlock() == Blocks.NETHER_PORTAL) {
-
             if (portalTimeout.elapsed() && !leftPortal) {
                 return wanderTask;
             }
@@ -99,14 +99,15 @@ public class EnterNetherPortalTask extends Task {
             return canStand && goodPortal.test(blockPos);
         };
 
-        if (mod.getBlockScanner().anyFound(standablePortal, Blocks.NETHER_PORTAL)) {
+        boolean foundStandablePortal = mod.getBlockScanner().anyFound(standablePortal, Blocks.NETHER_PORTAL);
+        if (foundStandablePortal) {
             setDebugState("Going to found portal");
             return new DoToClosestBlockTask(blockPos -> new GetToBlockTask(blockPos, false), standablePortal, Blocks.NETHER_PORTAL);
         }
 
         //this probably isn't needed here, the check should fail everytime
         
-        if (!mod.getBlockScanner().anyFound(standablePortal, Blocks.NETHER_PORTAL)) {
+        if (!foundStandablePortal) {
             setDebugState("Making new nether portal.");
             if (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
                 return new ConstructNetherPortalBucketTask();

@@ -28,7 +28,8 @@ public class SearchChunkForBlockTask extends SearchChunksExploreTask {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof SearchChunkForBlockTask blockTask) {
-            return Arrays.equals(blockTask._toSearchFor.toArray(Block[]::new), _toSearchFor.toArray(Block[]::new));
+            boolean equal = Arrays.equals(blockTask._toSearchFor.toArray(Block[]::new), _toSearchFor.toArray(Block[]::new));
+            return equal;
         }
         return false;
     }

@@ -137,7 +137,6 @@ public class BotBehaviour {
 
     public void setRayTracingFluidHandling(RaycastContext.FluidHandling fluidHandling) {
         current().rayFluidHandling = fluidHandling;
-        //Debug.logMessage("OOF: " + fluidHandling);
         current().applyState();
     }
 
@@ -237,12 +236,10 @@ public class BotBehaviour {
 
     public State pop() {
         if (states.isEmpty()) {
-            Debug.logError("State stack is empty. This shouldn't be happening.");
             return null;
         }
         State popped = states.pop();
         if (states.isEmpty()) {
-            Debug.logError("State stack is empty after pop. This shouldn't be happening.");
             return null;
         }
         states.peek().applyState();
@@ -251,7 +248,6 @@ public class BotBehaviour {
 
     private State current() {
         if (states.isEmpty()) {
-            Debug.logError("STATE EMPTY, UNEMPTIED!");
             push();
         }
         return states.peek();

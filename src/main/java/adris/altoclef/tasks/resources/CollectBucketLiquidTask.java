@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.InteractWithBlockTask;
@@ -163,7 +162,6 @@ public class CollectBucketLiquidTask extends ResourceTask {
                         mod.getClientBaritone().getPathingBehavior().forceCancel();
                         mod.getClientBaritone().getExploreProcess().onLostControl();
                         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-                        Debug.logMessage("Failed to break, blacklisting.");
                         mod.getBlockScanner().requestBlockUnreachable(blockPos);
                         blacklist.add(blockPos);
                     }

@@ -69,6 +69,9 @@ public class ActionPriorityTask extends PriorityTask {
         }
 
         if (pair.getRight() <= 0 || pair.getLeft() == null) {
+            if (pair.getLeft() == null && pair.getRight() > 0) {
+            } else if (pair.getLeft() != null && pair.getRight() <= 0) {
+            }
             pair.setLeft(null);
             pair.setRight(Double.NEGATIVE_INFINITY);
         }

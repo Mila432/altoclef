@@ -46,7 +46,9 @@ public class ListArg<T> extends Arg<List<T>> {
         // need to peek to not consume any info for the child
         if (!parser.peek().startsWith("[")) {
             if (aliases.containsKey(parser.peek())) {
-                return aliases.get(parser.next());
+                String alias = parser.peek();
+                List<T> result = aliases.get(parser.next());
+                return result;
             } else {
                 return List.of(argumentFunc.parse(parser));
             }
@@ -70,7 +72,9 @@ public class ListArg<T> extends Arg<List<T>> {
 
             StringReader partReader = new StringReader(part);
             if (aliases.containsKey(partReader.peek())) {
-                result.addAll(aliases.get(partReader.next()));
+                String alias = partReader.peek();
+                List<T> aliasResult = aliases.get(partReader.next());
+                result.addAll(aliasResult);
             } else {
                 result.add(argumentFunc.parse(partReader));
             }

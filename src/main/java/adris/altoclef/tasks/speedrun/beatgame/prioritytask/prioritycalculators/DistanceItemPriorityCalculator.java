@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.beatgame.prioritytask.prioritycalculators;
 
+
 public class DistanceItemPriorityCalculator extends DistancePriorityCalculator {
 
     private final double multiplier;
@@ -15,6 +16,8 @@ public class DistanceItemPriorityCalculator extends DistancePriorityCalculator {
     }
 
     protected double calculatePriority(double distance) {
+        if (distance <= 0) {
+        }
         double priority = 1 / distance;
 
         if (super.minCountSatisfied) {

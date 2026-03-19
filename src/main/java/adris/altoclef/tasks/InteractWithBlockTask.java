@@ -1,7 +1,6 @@
 package adris.altoclef.tasks;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.movement.SafeRandomShimmyTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
@@ -200,8 +199,12 @@ public class InteractWithBlockTask extends Task {
     // This happens all the time in mineshafts and swamps/jungles
     private BlockPos stuckInBlock(AltoClef mod) {
         BlockPos p = mod.getPlayer().getBlockPos();
-        if (isAnnoying(mod, p)) return p;
-        if (isAnnoying(mod, p.up())) return p.up();
+        if (isAnnoying(mod, p)) {
+            return p;
+        }
+        if (isAnnoying(mod, p.up())) {
+            return p.up();
+        }
         BlockPos[] toCheck = generateSides(p);
         for (BlockPos check : toCheck) {
             if (isAnnoying(mod, check)) {
@@ -289,7 +292,6 @@ public class InteractWithBlockTask extends Task {
             return wanderTask;
         }
         if (!moveChecker.check(mod)) {
-            Debug.logMessage("Failed, blacklisting and wandering.");
             mod.getBlockScanner().requestBlockUnreachable(target);
             return wanderTask;
         }
@@ -385,8 +387,9 @@ public class InteractWithBlockTask extends Task {
 
         // Don't interact if baritone can't interact.
         if (mod.getExtraBaritoneSettings().isInteractionPaused() || mod.getFoodChain().needsToEat() ||
-                mod.getPlayer().isBlocking())
+                mod.getPlayer().isBlocking()) {
             return ClickResponse.WAIT_FOR_CLICK;
+        }
 
         // We can't interact while a screen is open.
         if (!StorageHelper.isPlayerInventoryOpen()) {

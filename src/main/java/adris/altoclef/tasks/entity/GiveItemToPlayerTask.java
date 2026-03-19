@@ -117,7 +117,13 @@ public class GiveItemToPlayerTask extends Task {
             return null;
         }
 
-        if (targetPos.isInRange(mod.getPlayer().getPos(), 4)) {
+        if (targetPos.isInRange(
+                //#if MC >= 12111
+                mod.getPlayer().getEntityPos()
+                //#else
+                //$$ mod.getPlayer().getPos()
+                //#endif
+                , 4)) {
             if (!mod.getEntityTracker().isPlayerLoaded(playerName)) {
                 mod.logWarning("Failed to get to player \"" + playerName + "\". We moved to where we last saw them but now have no idea where they are.");
                 stop();

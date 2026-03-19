@@ -40,7 +40,9 @@ public class CollectNetherBricksTask extends ResourceTask {
          * Otherwise craft them from the "nether_brick" item.
          */
 
-        if (mod.getBlockScanner().anyFound(Blocks.NETHER_BRICKS)) {
+        boolean netherBrickBlocksFound = mod.getBlockScanner().anyFound(Blocks.NETHER_BRICKS);
+        
+        if (netherBrickBlocksFound) {
             return new MineAndCollectTask(Items.NETHER_BRICKS, _count, new Block[]{Blocks.NETHER_BRICKS}, MiningRequirement.WOOD);
         }
 

@@ -15,6 +15,13 @@ public interface ITaskRequiresGrounded extends ITaskCanForce {
             return false;
 
         ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
-        return !(player.isOnGround() || player.isSwimming() || player.isTouchingWater() || player.isClimbing());
+        if (player == null) {
+            return false;
+        }
+
+        boolean isGrounded = player.isOnGround() || player.isSwimming() || player.isTouchingWater() || player.isClimbing();
+        if (!isGrounded) {
+        }
+        return !isGrounded;
     }
 }

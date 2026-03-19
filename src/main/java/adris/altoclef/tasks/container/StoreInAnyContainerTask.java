@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.container;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.construction.PlaceBlockNearbyTask;
@@ -105,7 +104,6 @@ public class StoreInAnyContainerTask extends Task {
             setDebugState("Going to container and depositing items");
 
             if (!_progressChecker.check(mod) && _currentChestTry != null) {
-                Debug.logMessage("Failed to open container. Suggesting it may be unreachable.");
                 mod.getBlockScanner().requestBlockUnreachable(_currentChestTry, 2);
                 _currentChestTry = null;
                 _progressChecker.reset();

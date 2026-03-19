@@ -16,6 +16,7 @@ public class MeatCommand extends Command {
 
     @Override
     protected void call(AltoClef mod, ArgParser parser) throws CommandException {
-        mod.runUserTask(new CollectMeatTask(parser.get(Integer.class)), this::finish);
+        int count = parser.get(Integer.class);
+        mod.runUserTask(new CollectMeatTask(count), this::finish);
     }
 }

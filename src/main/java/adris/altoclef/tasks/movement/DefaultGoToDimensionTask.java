@@ -8,6 +8,7 @@ import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.Optional;
 
@@ -136,8 +137,16 @@ public class DefaultGoToDimensionTask extends Task {
 
     private boolean netherPortalIsClose(AltoClef mod) {
         if (mod.getBlockScanner().anyFound(Blocks.NETHER_PORTAL)) {
-            Optional<BlockPos> closest = mod.getBlockScanner().getNearestBlock( Blocks.NETHER_PORTAL);
-            return closest.isPresent() && closest.get().isWithinDistance(mod.getPlayer().getPos(), 2000);
+            Optional<BlockPos> closest = mod.getBlockScanner().getNearestBlock(Blocks.NETHER_PORTAL);
+            if (closest.isPresent()) {
+                //#if MC >= 12111
+                Vec3d playerPos = mod.getPlayer().getEntityPos();
+                //#else
+                //$$ Vec3d playerPos = mod.getPlayer().getPos();
+                //#endif
+                boolean isClose = closest.get().isWithinDistance(playerPos, 2000);
+                return isClose;
+            }
         }
         return false;
     }

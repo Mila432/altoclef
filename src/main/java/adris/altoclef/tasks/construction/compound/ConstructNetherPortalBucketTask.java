@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.construction.compound;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.construction.ClearLiquidTask;
@@ -156,13 +155,16 @@ public class ConstructNetherPortalBucketTask extends Task {
             }
         }
         if (refreshTimer.elapsed()) {
-            Debug.logMessage("Duct tape: Refreshing inventory again just in case");
             refreshTimer.reset();
             mod.getSlotHandler().refreshInventory();
         }
 
         //If too far, reset.
-        if (portalOrigin != null && !portalOrigin.isWithinDistance(mod.getPlayer().getPos(), 2000)) {
+        //#if MC >= 12111
+        if (portalOrigin != null && !portalOrigin.isWithinDistance(mod.getPlayer().getEntityPos(), 2000)) {
+        //#else
+        //$$ if (portalOrigin != null && !portalOrigin.isWithinDistance(mod.getPlayer().getPos(), 2000)) {
+        //#endif
             portalOrigin = null;
             currentDestroyTarget = null;
         }
@@ -212,13 +214,11 @@ public class ConstructNetherPortalBucketTask extends Task {
             if (firstSearch || lavaSearchTimer.elapsed()) {
                 firstSearch = false;
                 lavaSearchTimer.reset();
-                Debug.logMessage("(Searching for lava lake with portalable spot nearby...)");
                 BlockPos lavaPos = findLavaLake(mod, mod.getPlayer().getBlockPos());
                 if (lavaPos != null) {
                     // We have a lava lake, set our portal origin!
                     BlockPos foundPortalRegion = getPortalableRegion(mod, lavaPos, mod.getPlayer().getBlockPos(), new Vec3i(-1, 0, 0), PORTALABLE_REGION_SIZE, 20);
                     if (foundPortalRegion == null) {
-                        Debug.logWarning("Failed to find portalable region nearby. Consider increasing the search timeout range");
                     } else {
                         portalOrigin = foundPortalRegion.add(PORTAL_ORIGIN_RELATIVE_TO_REGION);
                         foundSpot = true;
@@ -227,7 +227,6 @@ public class ConstructNetherPortalBucketTask extends Task {
                         return getToLakeTask;
                     }
                 } else {
-                    Debug.logMessage("(lava lake not found)");
                 }
             }
 
@@ -314,7 +313,6 @@ public class ConstructNetherPortalBucketTask extends Task {
                 if (sqDist < nearestSqDistance) {
                     int depth = getNumberOfBlocksAdjacent(alreadyExplored, pos);
                     if (depth != 0) {
-                        Debug.logMessage("Found with depth " + depth);
                         if (depth >= 12) {
                             nearestSqDistance = sqDist;
                             nearestLake = pos;

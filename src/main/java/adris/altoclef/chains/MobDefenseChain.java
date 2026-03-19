@@ -1,7 +1,6 @@
 package adris.altoclef.chains;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.control.KillAura;
 import adris.altoclef.multiversion.versionedfields.Entities;
 import adris.altoclef.multiversion.item.ItemVer;
@@ -24,7 +23,9 @@ import net.minecraft.block.AbstractFireBlock;
 import net.minecraft.block.Block;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.*;
@@ -34,7 +35,14 @@ import net.minecraft.entity.projectile.thrown.PotionEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.SwordItem;
+//#if MC < 12111
+//$$ import net.minecraft.item.SwordItem;
+//#endif
+//#if MC >= 12111
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.AttributeModifierSlot;
+import net.minecraft.component.type.AttributeModifiersComponent;
+//#endif
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -74,7 +82,11 @@ public class MobDefenseChain extends SingleTaskChain {
 
     public static double getCreeperSafety(Vec3d pos, CreeperEntity creeper) {
         double distance = creeper.squaredDistanceTo(pos);
-        float fuse = creeper.getClientFuseTime(1);
+//#if MC >= 12111
+        float fuse = creeper.getLerpedFuseTime(1.0F);
+//#else
+//$$        float fuse = creeper.getClientFuseTime(1);
+//#endif
 
         // Not fusing.
         if (fuse <= 0.001f) return distance;
@@ -109,7 +121,11 @@ public class MobDefenseChain extends SingleTaskChain {
             if (toDealWith instanceof EndermanEntity || toDealWith instanceof SlimeEntity || toDealWith instanceof BlazeEntity) {
 
                 numberOfProblematicEntities += 1;
-            } else if (toDealWith instanceof DrownedEntity && toDealWith.getEquippedItems() == Items.TRIDENT) {
+//#if MC >= 12111
+            } else if (toDealWith instanceof DrownedEntity drowned && drowned.getEquippedStack(EquipmentSlot.MAINHAND).getItem() == Items.TRIDENT) {
+//#else
+//$$            } else if (toDealWith instanceof DrownedEntity && toDealWith.getEquippedItems() == Items.TRIDENT) {
+//#endif
                 // Drowned with tridents are also REALLY dangerous, maybe we should increase this??
                 numberOfProblematicEntities += 5;
             }
@@ -192,16 +208,32 @@ public class MobDefenseChain extends SingleTaskChain {
 
         doingFunkyStuff = false;
         PlayerSlot offhandSlot = PlayerSlot.OFFHAND_SLOT;
-        Item offhandItem = StorageHelper.getItemStackInSlot(offhandSlot).getItem();
+        ItemStack offhandStack = StorageHelper.getItemStackInSlot(offhandSlot);
+        Item offhandItem = offhandStack.getItem();
         // Run away from creepers
         CreeperEntity blowingUp = getClosestFusingCreeper(mod);
         if (blowingUp != null) {
-            if ((!mod.getFoodChain().needsToEat() || mod.getPlayer().getHealth() < 9)
-                    && hasShield(mod)
-                    && !mod.getEntityTracker().entityFound(PotionEntity.class)
-                    && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)
-                    && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()
-                    && blowingUp.getClientFuseTime(blowingUp.getFuseSpeed()) > 0.5) {
+            boolean needsToEat = mod.getFoodChain().needsToEat();
+            float playerHealth = mod.getPlayer().getHealth();
+            boolean hasShield = hasShield(mod);
+            boolean potionFound = mod.getEntityTracker().entityFound(PotionEntity.class);
+//#if MC >= 12111
+            boolean cooldownActive = mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandStack);
+            float fuseTime = blowingUp.getLerpedFuseTime(blowingUp.getFuseSpeed());
+//#else
+//$$            boolean cooldownActive = mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem);
+//$$            float fuseTime = blowingUp.getClientFuseTime(blowingUp.getFuseSpeed());
+//#endif
+            boolean safeToCancel = mod.getClientBaritone().getPathingBehavior().isSafeToCancel();
+
+            boolean shouldShield = (!needsToEat || playerHealth < 9)
+                    && hasShield
+                    && !potionFound
+                    && !cooldownActive
+                    && safeToCancel
+                    && fuseTime > 0.5;
+            
+            if (shouldShield) {
                 LookHelper.lookAt(mod, blowingUp.getEyePos());
                 ItemStack shieldSlot = StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT);
                 if (shieldSlot.getItem() != Items.SHIELD) {
@@ -213,16 +245,34 @@ public class MobDefenseChain extends SingleTaskChain {
                 doingFunkyStuff = true;
                 runAwayTask = new RunAwayFromCreepersTask(CREEPER_KEEP_DISTANCE);
                 setTask(runAwayTask);
-                return 50 + blowingUp.getClientFuseTime(1) * 50;
+//#if MC >= 12111
+                return 50 + blowingUp.getLerpedFuseTime(1.0F) * 50;
+//#else
+//$$                return 50 + blowingUp.getClientFuseTime(1) * 50;
+//#endif
             }
         }
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
             // Block projectiles with shield
-            if (mod.getModSettings().isDodgeProjectiles()
-                    && hasShield(mod)
-                    && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)
-                    && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()
-                    && !mod.getEntityTracker().entityFound(PotionEntity.class) && isProjectileClose(mod)) {
+            boolean dodgeProjectilesSetting = mod.getModSettings().isDodgeProjectiles();
+            boolean hasShield = hasShield(mod);
+//#if MC >= 12111
+            boolean cooldownActive = mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandStack);
+//#else
+//$$            boolean cooldownActive = mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem);
+//#endif
+            boolean safeToCancel = mod.getClientBaritone().getPathingBehavior().isSafeToCancel();
+            boolean potionFound = mod.getEntityTracker().entityFound(PotionEntity.class);
+            boolean projectileClose = isProjectileClose(mod);
+
+            boolean shouldBlockProjectiles = dodgeProjectilesSetting
+                    && hasShield
+                    && !cooldownActive
+                    && safeToCancel
+                    && !potionFound
+                    && projectileClose;
+            
+            if (shouldBlockProjectiles) {
                 ItemStack shieldSlot = StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT);
                 if (shieldSlot.getItem() != Items.SHIELD) {
                     mod.getSlotHandler().forceEquipItemToOffhand(Items.SHIELD);
@@ -231,7 +281,7 @@ public class MobDefenseChain extends SingleTaskChain {
                 }
                 return 60;
             }
-            if (blowingUp == null && !isProjectileClose(mod)) {
+            if (blowingUp == null && !projectileClose) {
                 stopShielding(mod);
             }
         }
@@ -319,16 +369,18 @@ public class MobDefenseChain extends SingleTaskChain {
             if (!toDealWithList.isEmpty()) {
 
                 // Depending on our weapons/armor, we may choose to straight up kill hostiles if we're not dodging their arrows.
-                SwordItem bestSword = getBestSword(mod);
+                float bestSwordDamage = getBestSwordDamage(mod);
 
                 int armor = mod.getPlayer().getArmor();
-                float damage = bestSword == null ? 0 : (bestSword.getMaterial().getAttackDamage()) + 1;
+                float damage = bestSwordDamage;
 
-                int shield = hasShield(mod) && bestSword != null ? 3 : 0;
+                int shield = hasShield(mod) && bestSwordDamage > 0 ? 3 : 0;
 
                 int canDealWith = (int) Math.ceil((armor * 3.6 / 20.0) + (damage * 0.8) + (shield));
+                int dangerousness = getDangerousnessScore(toDealWithList);
 
-                if (canDealWith >= getDangerousnessScore(toDealWithList) || needsChangeOnAttack) {
+
+                if (canDealWith >= dangerousness || needsChangeOnAttack) {
                     // we just decided to attack, so we should either get it, or hit something before running away again
                     if (!(mainTask instanceof KillEntitiesTask)) {
                         needsChangeOnAttack = true;
@@ -373,18 +425,32 @@ public class MobDefenseChain extends SingleTaskChain {
         return mod.getItemStorage().hasItem(Items.SHIELD) || mod.getItemStorage().hasItemInOffhand(Items.SHIELD);
     }
 
-    private static SwordItem getBestSword(AltoClef mod) {
+    private static float getBestSwordDamage(AltoClef mod) {
         Item[] SWORDS = new Item[]{Items.NETHERITE_SWORD, Items.DIAMOND_SWORD, Items.IRON_SWORD, Items.GOLDEN_SWORD,
                 Items.STONE_SWORD, Items.WOODEN_SWORD};
 
-        SwordItem bestSword = null;
+        float bestDamage = 0;
         for (Item item : SWORDS) {
             if (mod.getItemStorage().hasItem(item)) {
-                bestSword = (SwordItem) item;
-                break;
+                float damage = 0;
+//#if MC >= 12111
+                // In 1.21.11+, swords are Items with attribute modifiers.
+                ItemStack stack = new ItemStack(item);
+                AttributeModifiersComponent modifiers = stack.getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT);
+                damage = (float) modifiers.applyOperations(EntityAttributes.ATTACK_DAMAGE, 0.0, EquipmentSlot.MAINHAND);
+//#else
+//$$                // In older versions, we can cast to SwordItem and get the material's attack damage.
+//$$                if (item instanceof SwordItem sword) {
+//$$                    damage = sword.getMaterial().getAttackDamage() + 1;
+//$$                }
+//#endif
+                if (damage > bestDamage) {
+                    bestDamage = damage;
+                }
+                break; // We break at the first (best) sword we have, because the array is ordered by best to worst.
             }
         }
-        return bestSword;
+        return bestDamage;
     }
 
     private BlockPos isInsideFireAndOnFire(AltoClef mod) {
@@ -462,11 +528,19 @@ public class MobDefenseChain extends SingleTaskChain {
             List<CreeperEntity> creepers = mod.getEntityTracker().getTrackedEntities(CreeperEntity.class);
             for (CreeperEntity creeper : creepers) {
                 if (creeper == null) continue;
-                if (creeper.getClientFuseTime(1) < 0.001) continue;
+//#if MC >= 12111
+                if (creeper.getLerpedFuseTime(1.0F) < 0.001) continue;
+//#else
+//$$                if (creeper.getClientFuseTime(1) < 0.001) continue;
+//#endif
 
                 // We want to pick the closest creeper, but FIRST pick creepers about to blow
                 // At max fuse, the cost goes to basically zero.
-                double safety = getCreeperSafety(mod.getPlayer().getPos(), creeper);
+//#if MC >= 12111
+                double safety = getCreeperSafety(mod.getPlayer().getEntityPos(), creeper);
+//#else
+//$$                double safety = getCreeperSafety(mod.getPlayer().getPos(), creeper);
+//#endif
                 if (safety < worstSafety) {
                     target = creeper;
                 }
@@ -474,7 +548,6 @@ public class MobDefenseChain extends SingleTaskChain {
         } catch (ConcurrentModificationException | ArrayIndexOutOfBoundsException | NullPointerException e) {
             // IDK why but these exceptions happen sometimes. It's extremely bizarre and I
             // have no idea why.
-            Debug.logWarning("Weird Exception caught and ignored while scanning for creepers: " + e.getMessage());
             return target;
         }
         return target;
@@ -484,7 +557,11 @@ public class MobDefenseChain extends SingleTaskChain {
         List<CachedProjectile> projectiles = mod.getEntityTracker().getProjectiles();
         try {
             for (CachedProjectile projectile : projectiles) {
-                if (projectile.position.squaredDistanceTo(mod.getPlayer().getPos()) < 150) {
+//#if MC >= 12111
+                if (projectile.position.squaredDistanceTo(mod.getPlayer().getEntityPos()) < 150) {
+//#else
+//$$                if (projectile.position.squaredDistanceTo(mod.getPlayer().getPos()) < 150) {
+//#endif
                     boolean isGhastBall = projectile.projectileType == FireballEntity.class;
                     if (isGhastBall) {
                         Optional<Entity> ghastBall = mod.getEntityTracker().getClosestEntity(FireballEntity.class);
@@ -512,7 +589,11 @@ public class MobDefenseChain extends SingleTaskChain {
 
                     Vec3d expectedHit = ProjectileHelper.calculateArrowClosestApproach(projectile, mod.getPlayer());
 
-                    Vec3d delta = mod.getPlayer().getPos().subtract(expectedHit);
+//#if MC >= 12111
+                    Vec3d delta = mod.getPlayer().getEntityPos().subtract(expectedHit);
+//#else
+//$$                    Vec3d delta = mod.getPlayer().getPos().subtract(expectedHit);
+//#endif
 
                     double horizontalDistanceSq = delta.x * delta.x + delta.z * delta.z;
                     double verticalDistance = Math.abs(delta.y);
@@ -529,7 +610,6 @@ public class MobDefenseChain extends SingleTaskChain {
             }
 
         } catch (ConcurrentModificationException e) {
-            Debug.logWarning(e.getMessage());
         }
 
         // TODO refactor this into something more reliable for all mobs
@@ -586,7 +666,11 @@ public class MobDefenseChain extends SingleTaskChain {
 
                 synchronized (BaritoneHelper.MINECRAFT_LOCK) {
                     for (Entity entity : hostiles) {
+//#if MC >= 12111
                         if (entity.isInRange(player, SAFE_KEEP_DISTANCE)
+//#else
+//$$                        if (entity.isInRange(player, SAFE_KEEP_DISTANCE)
+//#endif
                                 && !mod.getBehaviour().shouldExcludeFromForcefield(entity)
                                 && EntityHelper.isAngryAtPlayer(mod, entity)) {
                             return true;
@@ -594,7 +678,6 @@ public class MobDefenseChain extends SingleTaskChain {
                     }
                 }
             } catch (Exception e) {
-                Debug.logWarning("Weird multithread exception. Will fix later. " + e.getMessage());
             }
         }
         return false;

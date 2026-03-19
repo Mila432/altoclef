@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.container;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.multiversion.versionedfields.Blocks;
 import adris.altoclef.multiversion.versionedfields.Items;
@@ -74,7 +73,6 @@ public class SmeltInBlastFurnaceTask extends ResourceTask {
     protected void onResourceStart(AltoClef mod) {
         mod.getBehaviour().push();
         if (_targets.length != 1) {
-            Debug.logWarning("Tried smelting multiple targets, only one target is supported at a time!");
         }
     }
 
@@ -193,6 +191,7 @@ public class SmeltInBlastFurnaceTask extends ResourceTask {
                     - mod.getItemStorage().getItemCountInventoryOnly(outputTarget.getMatches())
                     - (outputTarget.matches(_blastFurnaceCache.outputSlot.getItem()) ? _blastFurnaceCache.outputSlot.getCount() : 0)
                     - totalFuelInBlastFurnace;
+
 
             // We don't have enough materials...
             if (mod.getItemStorage().getItemCount(materialTarget.getMatches()) < materialsNeeded) {

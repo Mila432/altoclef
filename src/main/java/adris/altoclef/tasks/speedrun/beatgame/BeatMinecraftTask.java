@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.speedrun.beatgame;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.trackers.BlockScanner;
 import adris.altoclef.commands.SetGammaCommand;
@@ -219,7 +218,13 @@ public class BeatMinecraftTask extends Task {
             Optional<BlockPos> optionalPos = mod.getBlockScanner().getNearestBlock(Blocks.WATER);
             if (optionalPos.isEmpty()) return pair;
 
-            double distance = Math.sqrt(BlockPosVer.getSquaredDistance(optionalPos.get(),mod.getPlayer().getPos()));
+            double distance = Math.sqrt(BlockPosVer.getSquaredDistance(optionalPos.get(),
+                    //#if MC >= 12111
+                    mod.getPlayer().getEntityPos()
+                    //#else
+                    //$$ mod.getPlayer().getPos()
+                    //#endif
+            ));
             if (distance > 55) return pair;
 
             pair.setRight(10 / distance * 77.3);
@@ -354,16 +359,10 @@ public class BeatMinecraftTask extends Task {
     }
 
     public static boolean hasItem(AltoClef mod, Item item) {
-        ClientPlayerEntity player = mod.getPlayer();
-        PlayerInventory inv = player.getInventory();
-        List<DefaultedList<ItemStack>> combinedInventory = List.of(inv.main, inv.armor, inv.offHand);
-
-        for (List<ItemStack> list : combinedInventory) {
-            for (ItemStack itemStack : list) {
-                if (itemStack.getItem().equals(item)) return true;
-            }
+        List<ItemStack> stacks = mod.getItemStorage().getItemStacksPlayerInventory(false);
+        for (ItemStack stack : stacks) {
+            if (stack.getItem().equals(item)) return true;
         }
-
         return false;
     }
 
@@ -446,7 +445,13 @@ public class BeatMinecraftTask extends Task {
                     if (skipNight[0]) return Double.NEGATIVE_INFINITY;
 
                     Optional<BlockPos> pos = mod.getBlockScanner().getNearestBlock(ItemHelper.itemsToBlocks(ItemHelper.BED));
-                    if (pos.isPresent() && pos.get().isWithinDistance(mod.getPlayer().getPos(), 30)) return 1_000_000;
+                    if (pos.isPresent() && pos.get().isWithinDistance(
+                            //#if MC >= 12111
+                            mod.getPlayer().getEntityPos()
+                            //#else
+                            //$$ mod.getPlayer().getPos()
+                            //#endif
+                            , 30)) return 1_000_000;
 
                     return Double.NEGATIVE_INFINITY;
                 }
@@ -582,7 +587,13 @@ public class BeatMinecraftTask extends Task {
                 return pair;
             }
 
-            double dst = Math.sqrt(BlockPosVer.getSquaredDistance(chest.get(),mod.getPlayer().getPos()));
+            double dst = Math.sqrt(BlockPosVer.getSquaredDistance(chest.get(),
+                    //#if MC >= 12111
+                    mod.getPlayer().getEntityPos()
+                    //#else
+                    //$$ mod.getPlayer().getPos()
+                    //#endif
+            ));
             pair.setRight(30d / dst * 175);
             pair.setLeft(new GetToBlockTask(chest.get().up()));
 
@@ -734,7 +745,6 @@ public class BeatMinecraftTask extends Task {
         }
 
         if (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD && dragonIsDead) {
-            Debug.logInternal("isFinished - Dragon is dead in the Overworld");
             return true;
         }
 
@@ -755,8 +765,6 @@ public class BeatMinecraftTask extends Task {
         // Check if the material count is below the minimum required count
         // or if the build materials task should be forced.
         if (materialCount < config.minBuildMaterialCount || shouldForce) {
-            Debug.logInternal("Building materials needed: " + materialCount);
-            Debug.logInternal("Force build materials: " + shouldForce);
             return true;
         } else {
             Debug.logInternal("Building materials not needed");
@@ -1071,12 +1079,10 @@ public class BeatMinecraftTask extends Task {
 
         // Check if "end_stone" is not part of the "throwawayItems" list and log a warning.
         if (!ArrayUtils.contains(mod.getModSettings().getThrowawayItems(mod), Items.END_STONE)) {
-            Debug.logWarning("\"end_stone\" is not part of your \"throwawayItems\" list " + settingsWarningTail);
         }
 
         // Check if "throwawayUnusedItems" is not set to true and log a warning.
         if (!mod.getModSettings().shouldThrowawayUnusedItems()) {
-            Debug.logWarning("\"throwawayUnusedItems\" is not set to true " + settingsWarningTail);
         }
     }
 
@@ -1171,9 +1177,20 @@ public class BeatMinecraftTask extends Task {
                 if (mod.getBlockScanner().isUnreachable(nearestTracking.get()) || !(entity instanceof HostileEntity))
                     continue;
 
-                if (mod.getPlayer().squaredDistanceTo(entity.getPos()) < 150 && nearestTracking.get().isWithinDistance(entity.getPos(), 30)) {
+                if (mod.getPlayer().squaredDistanceTo(
+                        //#if MC >= 12111
+                        entity.getEntityPos()
+                        //#else
+                        //$$ entity.getPos()
+                        //#endif
+                ) < 150 && nearestTracking.get().isWithinDistance(
+                        //#if MC >= 12111
+                        entity.getEntityPos()
+                        //#else
+                        //$$ entity.getPos()
+                        //#endif
+                        , 30)) {
 
-                    Debug.logMessage("Blacklisting dangerous " + block.toString());
                     mod.getBlockScanner().requestBlockUnreachable(nearestTracking.get(), 0);
                 }
             }
@@ -1197,9 +1214,13 @@ public class BeatMinecraftTask extends Task {
             List<ItemStack> itemStacks = itemStorage.getItemStacksPlayerInventory(true);
             for (ItemStack itemStack : itemStacks) {
                 Item item = itemStack.getItem();
-                if (item instanceof SwordItem) {
-                    mod.getSlotHandler().forceEquipItem(item);
-                }
+                //#if MC < 12111
+                //$$ if (item instanceof SwordItem) {
+                //$$     mod.getSlotHandler().forceEquipItem(item);
+                //$$ }
+                //#else
+                // In 1.21.11+, SwordItem is removed. We skip this check.
+                //#endif
             }
         }
 
@@ -1242,7 +1263,6 @@ public class BeatMinecraftTask extends Task {
         List<BlockPos> craftingTables = mod.getBlockScanner().getKnownLocations(Blocks.CRAFTING_TABLE);
         for (BlockPos craftingTable : craftingTables) {
             if (itemStorage.hasItem(Items.CRAFTING_TABLE) && !thisOrChildSatisfies(isCraftingTableTask) && (!mod.getBlockScanner().isUnreachable(craftingTable))) {
-                Debug.logMessage("Blacklisting extra crafting table.");
                 mod.getBlockScanner().requestBlockUnreachable(craftingTable, 0);
 
             }
@@ -1250,14 +1270,18 @@ public class BeatMinecraftTask extends Task {
                 BlockState craftingTablePosUp = mod.getWorld().getBlockState(craftingTable.up(2));
                 if (mod.getEntityTracker().entityFound(WitchEntity.class)) {
                     Optional<Entity> witch = mod.getEntityTracker().getClosestEntity(WitchEntity.class);
-                    if (witch.isPresent() && (craftingTable.isWithinDistance(witch.get().getPos(), 15))) {
-                        Debug.logMessage("Blacklisting witch crafting table.");
+                    if (witch.isPresent() && (craftingTable.isWithinDistance(
+                            //#if MC >= 12111
+                            witch.get().getEntityPos()
+                            //#else
+                            //$$ witch.get().getPos()
+                            //#endif
+                            , 15))) {
                         mod.getBlockScanner().requestBlockUnreachable(craftingTable, 0);
 
                     }
                 }
                 if (craftingTablePosUp.getBlock() == Blocks.WHITE_WOOL) {
-                    Debug.logMessage("Blacklisting pillage crafting table.");
                     mod.getBlockScanner().requestBlockUnreachable(craftingTable, 0);
                 }
             }
@@ -1266,7 +1290,6 @@ public class BeatMinecraftTask extends Task {
 
         for (BlockPos smoker : smokers) {
             if (itemStorage.hasItem(Items.SMOKER) && !mod.getBlockScanner().isUnreachable(smoker)) {
-                Debug.logMessage("Blacklisting extra smoker.");
                 mod.getBlockScanner().requestBlockUnreachable(smoker, 0);
             }
         }
@@ -1275,7 +1298,6 @@ public class BeatMinecraftTask extends Task {
 
         for (BlockPos furnace : furnaces) {
             if (itemStorage.hasItem(Items.FURNACE) && !goToNetherTask.isActive() && !ranStrongholdLocator && !mod.getBlockScanner().isUnreachable(furnace)) {
-                Debug.logMessage("Blacklisting extra furnace.");
                 mod.getBlockScanner().requestBlockUnreachable(furnace, 0);
             }
         }
@@ -1285,13 +1307,17 @@ public class BeatMinecraftTask extends Task {
         for (BlockPos log : logs) {
             Iterable<Entity> entities = mod.getWorld().getEntities();
             for (Entity entity : entities) {
-                if (entity instanceof PillagerEntity && !mod.getBlockScanner().isUnreachable(log) && log.isWithinDistance(entity.getPos(), 40)) {
-                    Debug.logMessage("Blacklisting pillage log.");
+                if (entity instanceof PillagerEntity && !mod.getBlockScanner().isUnreachable(log) && log.isWithinDistance(
+                        //#if MC >= 12111
+                        entity.getEntityPos()
+                        //#else
+                        //$$ entity.getPos()
+                        //#endif
+                        , 40)) {
                     mod.getBlockScanner().requestBlockUnreachable(log, 0);
                 }
             }
             if (log.getY() < 62 && !mod.getBlockScanner().isUnreachable(log) && !ironGearSatisfied && !eyeGearSatisfied) {
-                Debug.logMessage("Blacklisting dangerous log.");
                 mod.getBlockScanner().requestBlockUnreachable(log, 0);
             }
         }
@@ -1316,7 +1342,6 @@ public class BeatMinecraftTask extends Task {
                         Block block = mod.getWorld().getBlockState(p).getBlock();
 
                         if (ancientCityBlocks.contains(block)) {
-                            Debug.logMessage("Blacklisting ancient city wool " + pos);
                             mod.getBlockScanner().requestBlockUnreachable(pos, 0);
                             break searchLoop;
                         }
@@ -1868,9 +1893,6 @@ public class BeatMinecraftTask extends Task {
         int targetBeds = config.requiredBeds + (needsToSetSpawn ? 1 : 0) - bedsInEnd;
 
         // Output debug information
-        Debug.logInternal("needsToSetSpawn: " + needsToSetSpawn);
-        Debug.logInternal("bedsInEnd: " + bedsInEnd);
-        Debug.logInternal("targetBeds: " + targetBeds);
 
         return targetBeds;
     }
@@ -1895,15 +1917,11 @@ public class BeatMinecraftTask extends Task {
         int targetBeds = getTargetBeds(mod);
 
         // Log the values for debugging purposes
-        Debug.logInternal("Total End Items: " + totalEndItems);
-        Debug.logInternal("Item Count: " + itemCount);
-        Debug.logInternal("Target Beds: " + targetBeds);
 
         // Check if the player needs to acquire more beds
         boolean needsBeds = (itemCount + totalEndItems) < targetBeds;
 
         // Log the result for debugging purposes
-        Debug.logInternal("Needs Beds: " + needsBeds);
 
         // Return whether the player needs more beds
         return needsBeds;
@@ -2061,13 +2079,15 @@ public class BeatMinecraftTask extends Task {
         int eyeCount = mod.getItemStorage().getItemCount(Items.ENDER_EYE);
         int blazePowderCount = mod.getItemStorage().getItemCount(Items.BLAZE_POWDER);
         int blazeRodCount = mod.getItemStorage().getItemCount(Items.BLAZE_ROD);
+        int pearlCount = mod.getItemStorage().getItemCount(Items.ENDER_PEARL);
 
         int blazeRodTarget = (int) Math.ceil(((double) targetEyes - eyeCount - blazePowderCount) / 2.0);
         int enderPearlTarget = targetEyes - eyeCount;
 
         boolean needsBlazeRods = blazeRodCount < blazeRodTarget;
         boolean needsBlazePowder = eyeCount + blazePowderCount < targetEyes;
-        boolean needsEnderPearls = mod.getItemStorage().getItemCount(Items.ENDER_PEARL) < enderPearlTarget;
+        boolean needsEnderPearls = pearlCount < enderPearlTarget;
+
 
         if (needsBlazePowder && !needsBlazeRods) {
             // We have enough blaze rods.
@@ -2284,7 +2304,13 @@ public class BeatMinecraftTask extends Task {
                                 return new TimeoutWanderTask();
                             }
 
-                            if (WorldHelper.inRangeXZ(mod.getPlayer().getPos(),
+                            if (WorldHelper.inRangeXZ(
+                                    //#if MC >= 12111
+                                    mod.getPlayer().getEntityPos()
+                                    //#else
+                                    //$$ mod.getPlayer().getPos()
+                                    //#endif
+                                    ,
                                     WorldHelper.toVec3d(mod.getBlockScanner().getNearestBlock(Blocks.NETHER_BRICKS).get()), 2)) {
 
                                 setDebugState("trying to get to fortress");
@@ -2294,10 +2320,21 @@ public class BeatMinecraftTask extends Task {
                             setDebugState("Getting close to fortress");
 
                             if ((cachedFortressTask != null && !fortressTimer.elapsed() &&
-                                    mod.getPlayer().getPos().distanceTo(WorldHelper.toVec3d(cachedFortressTask.blockPos)) - 1 > prevPos.getManhattanDistance(cachedFortressTask.blockPos) / 2d
+                                    //#if MC >= 12111
+                                    mod.getPlayer().getEntityPos()
+                                    //#else
+                                    //$$ mod.getPlayer().getPos()
+                                    //#endif
+                                            .distanceTo(WorldHelper.toVec3d(cachedFortressTask.blockPos)) - 1 > prevPos.getManhattanDistance(cachedFortressTask.blockPos) / 2d
                             ) || !mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
                                 if (cachedFortressTask != null) {
-                                    mod.log(mod.getPlayer().getPos().distanceTo(WorldHelper.toVec3d(cachedFortressTask.blockPos)) + " : " + prevPos.getManhattanDistance(cachedFortressTask.blockPos) / 2);
+                                    mod.log(
+                                            //#if MC >= 12111
+                                            mod.getPlayer().getEntityPos()
+                                            //#else
+                                            //$$ mod.getPlayer().getPos()
+                                            //#endif
+                                                    .distanceTo(WorldHelper.toVec3d(cachedFortressTask.blockPos)) + " : " + prevPos.getManhattanDistance(cachedFortressTask.blockPos) / 2);
                                     return cachedFortressTask;
                                 }
                             }
@@ -2315,7 +2352,13 @@ public class BeatMinecraftTask extends Task {
                             prevPos = mod.getPlayer().getBlockPos();
 
                             BlockPos p = mod.getBlockScanner().getNearestBlock(Blocks.NETHER_BRICKS).get();
-                            int distance = (int) (mod.getPlayer().getPos().distanceTo(WorldHelper.toVec3d(p)) / 2);
+                            int distance = (int) (
+                                    //#if MC >= 12111
+                                    mod.getPlayer().getEntityPos()
+                                    //#else
+                                    //$$ mod.getPlayer().getPos()
+                                    //#endif
+                                            .distanceTo(WorldHelper.toVec3d(p)) / 2);
                             if (cachedFortressTask != null) {
                                 // prevents from getting stuck in place
                                 distance = Math.min(cachedFortressTask.range - 1, distance);

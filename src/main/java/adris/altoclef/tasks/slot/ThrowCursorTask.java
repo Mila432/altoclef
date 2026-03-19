@@ -18,7 +18,8 @@ public class ThrowCursorTask extends Task {
 
     @Override
     protected void onStop(Task interruptTask) {
-
+        if (interruptTask != null) {
+        }
     }
 
     @Override
@@ -33,6 +34,9 @@ public class ThrowCursorTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return throwTask.isFinished();
+        boolean finished = throwTask.isFinished();
+        if (finished) {
+        }
+        return finished;
     }
 }

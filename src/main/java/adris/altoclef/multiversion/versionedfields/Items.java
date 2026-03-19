@@ -1,6 +1,5 @@
 package adris.altoclef.multiversion.versionedfields;
 
-
 import net.minecraft.item.Item;
 
 /**

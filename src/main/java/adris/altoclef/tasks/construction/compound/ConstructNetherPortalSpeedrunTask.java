@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.construction.compound;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.construction.ClearLiquidTask;
@@ -74,19 +73,41 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     // !! Also represents the ORDER at which the lava will be placed.
     private static final LavaTarget[] PORTAL_FRAME_LAVA = new LavaTarget[]{
             // Left side
-            new LavaTarget(0, 0, -1, Direction.fromVector(-1, 0, 0)),
-            new LavaTarget(0, 1, -1, Direction.fromVector(-1, 0, 0)),
-            new LavaTarget(0, 2, -1, Direction.fromVector(0, 1, 0)),
+//#if MC >= 12111
+            new LavaTarget(0, 0, -1, Direction.fromVector(-1, 0, 0, null)),
+            new LavaTarget(0, 1, -1, Direction.fromVector(-1, 0, 0, null)),
+            new LavaTarget(0, 2, -1, Direction.fromVector(0, 1, 0, null)),
+//#else
+//$$            new LavaTarget(0, 0, -1, Direction.fromVector(-1, 0, 0)),
+//$$            new LavaTarget(0, 1, -1, Direction.fromVector(-1, 0, 0)),
+//$$            new LavaTarget(0, 2, -1, Direction.fromVector(0, 1, 0)),
+//#endif
             // Right side
-            new LavaTarget(0, 0, 2, Direction.fromVector(-1, 0, 0)),
-            new LavaTarget(0, 1, 2, Direction.fromVector(0, 1, 0)),
-            new LavaTarget(0, 2, 2, Direction.fromVector(0, 1, 0)),
+//#if MC >= 12111
+            new LavaTarget(0, 0, 2, Direction.fromVector(-1, 0, 0, null)),
+            new LavaTarget(0, 1, 2, Direction.fromVector(0, 1, 0, null)),
+            new LavaTarget(0, 2, 2, Direction.fromVector(0, 1, 0, null)),
+//#else
+//$$            new LavaTarget(0, 0, 2, Direction.fromVector(-1, 0, 0)),
+//$$            new LavaTarget(0, 1, 2, Direction.fromVector(0, 1, 0)),
+//$$            new LavaTarget(0, 2, 2, Direction.fromVector(0, 1, 0)),
+//#endif
             // Bottom
-            new LavaTarget(0, -1, 0, Direction.fromVector(0, 1, 0)),
-            new LavaTarget(0, -1, 1, Direction.fromVector(0, 1, 0)),
+//#if MC >= 12111
+            new LavaTarget(0, -1, 0, Direction.fromVector(0, 1, 0, null)),
+            new LavaTarget(0, -1, 1, Direction.fromVector(0, 1, 0, null)),
+//#else
+//$$            new LavaTarget(0, -1, 0, Direction.fromVector(0, 1, 0)),
+//$$            new LavaTarget(0, -1, 1, Direction.fromVector(0, 1, 0)),
+//#endif
             // Top
-            new LavaTarget(0, 3, 0, Direction.fromVector(0, 0, 1)),
-            new LavaTarget(0, 3, 1, Direction.fromVector(0, 0, 1))
+//#if MC >= 12111
+            new LavaTarget(0, 3, 0, Direction.fromVector(0, 0, 1, null)),
+            new LavaTarget(0, 3, 1, Direction.fromVector(0, 0, 1, null))
+//#else
+//$$            new LavaTarget(0, 3, 0, Direction.fromVector(0, 0, 1)),
+//$$            new LavaTarget(0, 3, 1, Direction.fromVector(0, 0, 1))
+//#endif
     };
     private static final Vec3i[] PORTAL_INTERIOR = new Vec3i[]{
             new Vec3i(0, 0, 0),
@@ -170,19 +191,16 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
             if (firstSearch || lavaSearchTimer.elapsed()) {
                 firstSearch = false;
                 lavaSearchTimer.reset();
-                Debug.logMessage("(Searching for lava lake with portalable spot nearby...)");
                 BlockPos lavaPos = findLavaLake(mod, mod.getPlayer().getBlockPos());
                 if (lavaPos != null) {
                     // We have a lava lake, set our portal origin!
                     BlockPos foundPortalRegion = getPortalableRegion(lavaPos, mod.getPlayer().getBlockPos(), new Vec3i(-1, 0, 0), PORTALABLE_REGION_SIZE, 20);
                     if (foundPortalRegion == null) {
-                        Debug.logWarning("Failed to find portalable region nearby. Consider increasing the search timeout range");
                     } else {
                         portalOrigin = foundPortalRegion.add(PORTAL_ORIGIN_RELATIVE_TO_REGION);
                         foundSpot = true;
                     }
                 } else {
-                    Debug.logMessage("(lava lake not found)");
                 }
             }
 
@@ -276,7 +294,9 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
         }
         mod.getBehaviour().setAllowWalkThroughFlowingWater(false);
 
-        portalFrameBuilt = true;
+        if (!portalFrameBuilt) {
+            portalFrameBuilt = true;
+        }
 
         // Delete water source
         BlockPos waterSourcePos = portalOrigin.add(WATER_SOURCE_ORIGIN);
@@ -347,7 +367,6 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
             double sqDist = playerPos.getSquaredDistance(pos);
             if (sqDist < nearestSqDistance) {
                 int depth = getNumberOfBlocksAdjacent(alreadyExplored, pos);
-                Debug.logMessage("Found with depth " + depth);
                 if (depth >= 12) {
                     nearestSqDistance = sqDist;
                     nearestLake = pos;
@@ -449,14 +468,18 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
             for (int dz = 0; dz < PORTALABLE_REGION_SIZE.getZ(); ++dz) {
                 for (int dy = 0; dy < PORTALABLE_REGION_SIZE.getY(); ++dy) {
                     BlockPos toCheck = getPortalRegionCorner().add(dx,dy,dz);
-                    if (shouldBeDestroyed(toCheck)) return toCheck;
+                    if (shouldBeDestroyed(toCheck)) {
+                        return toCheck;
+                    }
                 }
             }
         }
         // Extra places
         for (Vec3i relativeToOrigin : PORTALABLE_REGION_EXTRA) {
             BlockPos toCheck = portalOrigin.add(relativeToOrigin);
-            if (shouldBeDestroyed(toCheck)) return toCheck;
+            if (shouldBeDestroyed(toCheck)) {
+                return toCheck;
+            }
         }
 
         return null;

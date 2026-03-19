@@ -7,5 +7,7 @@ import adris.altoclef.util.helpers.ItemHelper;
 public class CollectFlowerTask extends MineAndCollectTask {
     public CollectFlowerTask(int count) {
         super(new ItemTarget(ItemHelper.FLOWER, count), ItemHelper.itemsToBlocks(ItemHelper.FLOWER), MiningRequirement.HAND);
+        if (count <= 0) {
+        }
     }
 }

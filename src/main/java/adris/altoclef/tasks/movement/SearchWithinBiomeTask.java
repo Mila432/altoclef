@@ -26,7 +26,8 @@ public class SearchWithinBiomeTask extends SearchChunksExploreTask {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof SearchWithinBiomeTask task) {
-            return task._toSearch == _toSearch;
+            boolean result = task._toSearch == _toSearch;
+            return result;
         }
         return false;
     }

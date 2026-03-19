@@ -1,5 +1,6 @@
 package adris.altoclef.util.time;
 
+
 public class Stopwatch {
 
     boolean running = false;
@@ -10,7 +11,10 @@ public class Stopwatch {
     }
 
     public void begin() {
-        startTime = currentTime();
+        double now = currentTime();
+        if (running) {
+        }
+        startTime = now;
         running = true;
     }
 

@@ -51,19 +51,25 @@ public class GiveCommand extends Command {
         List<ItemTarget> resolved = new ArrayList<>();
         for (ItemTarget req : requested) {
             ItemTarget best = req;
+            boolean foundExactMatch = false;
             for (int i = 0; i < mod.getPlayer().getInventory().size(); i++) {
                 ItemStack stack = mod.getPlayer().getInventory().getStack(i);
                 if (!stack.isEmpty()) {
                     String invName = ItemHelper.stripItemName(stack.getItem());
                     if (invName.equalsIgnoreCase(req.getCatalogueName())) {
                         best = new ItemTarget(stack.getItem(), req.getTargetCount());
+                        foundExactMatch = true;
                         break;
                     }
                 }
             }
+            if (!foundExactMatch) {
+            }
             resolved.add(best);
         }
         GotoTarget cordinates = parser.get(GotoTarget.class);
+        if (cordinates == null) {
+        }
 
         // Submit a give task for each resolved item
         for (ItemTarget target : resolved) {

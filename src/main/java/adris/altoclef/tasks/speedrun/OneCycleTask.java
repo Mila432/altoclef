@@ -64,7 +64,13 @@ public class OneCycleTask extends Task {
             Direction offsetDir = dir.getAxis() == Direction.Axis.X ? Direction.SOUTH : Direction.WEST;
             BlockPos targetBlock = endPortalTop.down(3).offset(offsetDir, 3).offset(dir);
 
-            double d = distanceIgnoreY(WorldHelper.toVec3d(targetBlock), mod.getPlayer().getPos());
+            double d = distanceIgnoreY(WorldHelper.toVec3d(targetBlock),
+                    //#if MC >= 12111
+                    mod.getPlayer().getEntityPos()
+                    //#else
+                    //$$ mod.getPlayer().getPos()
+                    //#endif
+                    );
             if (d > 0.7) {
                 mod.log(d + "");
                 return new GetToBlockTask(targetBlock);
@@ -78,7 +84,8 @@ public class OneCycleTask extends Task {
             mod.getSlotHandler().forceEquipItem(ItemHelper.BED);
 
             if (bedHead == null) {
-                if (placeBedTimer.elapsed() && Math.abs(dragon.getY() - endPortalTop.getY()) < 10) {
+                boolean shouldPlace = placeBedTimer.elapsed() && Math.abs(dragon.getY() - endPortalTop.getY()) < 10;
+                if (shouldPlace) {
                     mod.getInputControls().tryPress(Input.CLICK_RIGHT);
                     waiTimer.reset();
                 }
@@ -120,6 +127,7 @@ public class OneCycleTask extends Task {
                 if (!skip) {
                     mod.getInputControls().tryPress(Input.CLICK_RIGHT);
                     placeBedTimer.reset();
+                } else {
                 }
             }
 

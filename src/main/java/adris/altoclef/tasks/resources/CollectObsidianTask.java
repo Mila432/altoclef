@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.construction.PlaceObsidianBucketTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
@@ -103,8 +102,13 @@ public class CollectObsidianTask extends ResourceTask {
         }
 
         Predicate<BlockPos> goodObsidian = (blockPos ->
-                blockPos.isWithinDistance(mod.getPlayer().getPos(), 800)
+                //#if MC >= 12111
+                blockPos.isWithinDistance(mod.getPlayer().getEntityPos(), 800)
                         && WorldHelper.canBreak(blockPos)
+                //#else
+                //$$ blockPos.isWithinDistance(mod.getPlayer().getPos(), 800)
+                //$$         && WorldHelper.canBreak(blockPos)
+                //#endif
         );
 
         /*
@@ -121,7 +125,9 @@ public class CollectObsidianTask extends ResourceTask {
             }
         }
          */
-        if (/*obsidianNearby || */mod.getBlockScanner().anyFound(goodObsidian, Blocks.OBSIDIAN) || mod.getEntityTracker().itemDropped(Items.OBSIDIAN)) {
+        boolean anyObsidianFound = mod.getBlockScanner().anyFound(goodObsidian, Blocks.OBSIDIAN);
+        boolean obsidianDropped = mod.getEntityTracker().itemDropped(Items.OBSIDIAN);
+        if (/*obsidianNearby || */anyObsidianFound || obsidianDropped) {
             /*
             // Clear nearby water
             BlockPos nearestObby = mod.getBlockTracker().getNearestTracking(mod.getPlayer().getPos(), Blocks.OBSIDIAN);
@@ -162,10 +168,13 @@ public class CollectObsidianTask extends ResourceTask {
         if (_placeObsidianTask != null && !mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
             // We've moved sort of far away from our post, and this will STOP running when we grab our lava
             // (which is exactly when we want it to run and no more!
-            if (!_placeObsidianTask.getPos().isWithinDistance(mod.getPlayer().getPos(), 4)) {
+            //#if MC >= 12111
+            if (!_placeObsidianTask.getPos().isWithinDistance(mod.getPlayer().getEntityPos(), 4)) {
+            //#else
+            //$$ if (!_placeObsidianTask.getPos().isWithinDistance(mod.getPlayer().getPos(), 4)) {
+            //#endif
                 BlockPos goodPos = getGoodObsidianPosition(mod);
                 if (goodPos != null) {
-                    Debug.logMessage("(nudged obsidian target closer)");
                     _placeObsidianTask = new PlaceObsidianBucketTask(goodPos);
                 }
             }

@@ -1,5 +1,6 @@
 package adris.altoclef.util.slots;
 
+
 public class CursorSlot extends Slot {
 
     public static final CursorSlot SLOT = new CursorSlot();

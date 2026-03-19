@@ -1,7 +1,6 @@
 package adris.altoclef.butler;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.ChatMessageEvent;
 import adris.altoclef.eventbus.events.TaskFinishedEvent;
@@ -57,7 +56,6 @@ public class Butler {
             if (sender != null && !Objects.equals(sender, receiver) && shouldAccept(messageType)) {
                 String wholeMessage = sender + " " + receiver + " " + message;
                 if (debug) {
-                    Debug.logMessage("RECEIVED WHISPER: \"" + wholeMessage + "\".");
                 }
                 this.mod.getButler().receiveMessage(wholeMessage, receiver);
             }
@@ -82,7 +80,6 @@ public class Butler {
         if (result != null) {
             this.receiveWhisper(result.from, result.message);
         } else if (ButlerConfig.getInstance().whisperFormatDebug) {
-            Debug.logMessage("    Not Parsing: MSG format not found.");
         }
     }
 
@@ -92,7 +89,6 @@ public class Butler {
         // Ignore messages from other bots.
         if (message.startsWith(BUTLER_MESSAGE_START)) {
             if (debug) {
-                Debug.logMessage("    Rejecting: MSG is detected to be sent from another bot.");
             }
             return;
         }
@@ -101,7 +97,6 @@ public class Butler {
             executeWhisper(username, message);
         } else {
             if (debug) {
-                Debug.logMessage("    Rejecting: User \"" + username + "\" is not authorized.");
             }
             if (ButlerConfig.getInstance().sendAuthorizationResponse) {
                 sendWhisper(username, ButlerConfig.getInstance().failedAuthorizationResposne.replace("{from}", username), MessagePriority.UNAUTHORIZED);
@@ -172,7 +167,6 @@ public class Butler {
         if (currentUser != null) {
             sendWhisper(currentUser, message, priority);
         } else {
-            Debug.logWarning("Failed to send butler message as there are no users present: " + message);
         }
     }
 

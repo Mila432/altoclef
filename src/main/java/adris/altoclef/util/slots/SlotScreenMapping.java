@@ -31,7 +31,8 @@ public class SlotScreenMapping {
         if (!_classList.isEmpty()) {
             for (SlotScreenMappingEntry entry : _classList) {
                 if (slotType == entry.type || slotType.isAssignableFrom(entry.type)) {
-                    return entry.inScreen.test(screen);
+                    boolean screenMatches = entry.inScreen.test(screen);
+                    return screenMatches;
                 }
             }
         }

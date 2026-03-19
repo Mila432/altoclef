@@ -39,7 +39,6 @@ public class KillEndermanTask extends ResourceTask {
 
     @Override
     protected void onResourceStart(AltoClef mod) {
-
     }
 
     @Override
@@ -73,9 +72,16 @@ public class KillEndermanTask extends ResourceTask {
         // Kill the angry one
         for (EndermanEntity entity : mod.getEntityTracker().getTrackedEntities(EndermanEntity.class)) {
 
-            if (belowNetherRoof.test(entity) && entity.isAngry() && entity.getPos().isInRange(mod.getPlayer().getPos(), TOO_FAR_AWAY)) {
+            //#if MC >= 12111
+            if (belowNetherRoof.test(entity) && entity.isAngry() && entity.getEntityPos().isInRange(mod.getPlayer().getEntityPos(), TOO_FAR_AWAY)) {
                 return new KillEntityTask(entity);
             }
+            //#else
+            //$$ if (belowNetherRoof.test(entity) && entity.isAngry() && entity.getPos().isInRange(mod.getPlayer().getPos(), TOO_FAR_AWAY)) {
+            //$$     Debug.logMessage("Found angry enderman within range. Attacking: " + entity);
+            //$$     return new KillEntityTask(entity);
+            //$$ }
+            //#endif
         }
 
         // Attack the closest one
@@ -84,7 +90,6 @@ public class KillEndermanTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(AltoClef mod, Task interruptTask) {
-
     }
 
     @Override

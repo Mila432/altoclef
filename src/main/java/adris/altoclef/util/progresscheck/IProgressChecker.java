@@ -1,5 +1,6 @@
 package adris.altoclef.util.progresscheck;
 
+
 /**
  * Used to determine when a task/command is not making any progress over a threshold period of time.
  */

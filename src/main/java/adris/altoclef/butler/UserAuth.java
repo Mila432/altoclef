@@ -22,8 +22,16 @@ public class UserAuth {
                 Make sure useButlerWhitelist is set to true in the settings file.
                 Anything after a pound sign (#) will be ignored.""");
 
-        UserListFile.load(BLACKLIST_PATH, newList -> _blacklist = newList);
-        UserListFile.load(WHITELIST_PATH, newList -> _whitelist = newList);
+        UserListFile.load(BLACKLIST_PATH, newList -> {
+            _blacklist = newList;
+            if (newList == null) {
+            }
+        });
+        UserListFile.load(WHITELIST_PATH, newList -> {
+            _whitelist = newList;
+            if (newList == null) {
+            }
+        });
     }
 
     public boolean isUserAuthorized(String username) {

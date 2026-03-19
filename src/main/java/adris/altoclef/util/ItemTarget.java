@@ -1,6 +1,5 @@
 package adris.altoclef.util;
 
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.util.helpers.ItemHelper;
 import net.minecraft.item.Item;
@@ -35,6 +34,8 @@ public class ItemTarget {
     private boolean infinite = false;
 
     public ItemTarget(Item[] items, int targetCount) {
+        if (targetCount < 0) {
+        }
         itemMatches = items;
         this.targetCount = targetCount;
         infinite = false;
@@ -43,6 +44,8 @@ public class ItemTarget {
     public ItemTarget(String catalogueName, int targetCount) {
         this.catalogueName = catalogueName;
         itemMatches = TaskCatalogue.getItemMatches(catalogueName);
+        if (itemMatches == null || itemMatches.length == 0) {
+        }
         this.targetCount = targetCount;
     }
 
@@ -122,19 +125,31 @@ public class ItemTarget {
     public boolean equals(Object obj) {
         if (obj instanceof ItemTarget other) {
             if (infinite) {
-                if (!other.infinite) return false;
+                if (!other.infinite) {
+                    return false;
+                }
             } else {
                 // Neither are infinite
-                if (targetCount != other.targetCount) return false;
+                if (targetCount != other.targetCount) {
+                    return false;
+                }
             }
-            if ((other.itemMatches == null) != (itemMatches == null)) return false;
+            if ((other.itemMatches == null) != (itemMatches == null)) {
+                return false;
+            }
             if (itemMatches != null) {
-                if (itemMatches.length != other.itemMatches.length) return false;
+                if (itemMatches.length != other.itemMatches.length) {
+                    return false;
+                }
                 for (int i = 0; i < itemMatches.length; ++i) {
                     if (other.itemMatches[i] == null) {
-                        if ((other.itemMatches[i] == null) != (itemMatches[i] == null)) return false;
+                        if ((other.itemMatches[i] == null) != (itemMatches[i] == null)) {
+                            return false;
+                        }
                     } else {
-                        if (!other.itemMatches[i].equals(itemMatches[i])) return false;
+                        if (!other.itemMatches[i].equals(itemMatches[i])) {
+                            return false;
+                        }
                     }
                 }
             }

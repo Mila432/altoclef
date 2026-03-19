@@ -91,11 +91,17 @@ public class CollectCropTask extends ResourceTask {
                 return _collectSeedTask;
             }
             if (mod.getEntityTracker().itemDropped(_cropSeed)) {
-                Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), _cropSeed);
+                //#if MC >= 12111
+                Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getEntityPos(), _cropSeed);
+                //#else
+                //$$ Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), _cropSeed);
+                //#endif
                 if (closest.isPresent() && closest.get().isInRange(mod.getPlayer(), 7)) {
                     // Trigger the collection of seeds.
                     return _collectSeedTask;
+                } else {
                 }
+            } else {
             }
         }
 
@@ -104,6 +110,9 @@ public class CollectCropTask extends ResourceTask {
             setDebugState("Replanting...");
             // We guarantee that empty cropland list has valid empty blocks. We can purge at this stage.
             _emptyCropland.removeIf(blockPos -> !isEmptyCrop(mod, blockPos));
+            if (_emptyCropland.isEmpty()) {
+            } else {
+            }
             assert !_emptyCropland.isEmpty();
             return new DoToClosestBlockTask(
                     blockPos -> new InteractWithBlockTask(new ItemTarget(_cropSeed, 1), Direction.UP, blockPos.down(), true),
@@ -132,6 +141,7 @@ public class CollectCropTask extends ResourceTask {
         return new DoToClosestBlockTask(
                 blockPos -> {
                     _emptyCropland.add(blockPos);
+                    BlockState state = mod.getWorld().getBlockState(blockPos);
                     return new DestroyBlockTask(blockPos);
                 },
                 validCrop,
@@ -185,16 +195,23 @@ public class CollectCropTask extends ResourceTask {
     private boolean isMature(AltoClef mod, BlockPos blockPos) {
         // Chunk needs to be loaded for wheat maturity to be checked.
         if (!mod.getChunkTracker().isChunkLoaded(blockPos) || !WorldHelper.canReach(blockPos)) {
-            return _wasFullyGrown.contains(blockPos);
+            boolean cachedMature = _wasFullyGrown.contains(blockPos);
+            if (!cachedMature) {
+            }
+            return cachedMature;
         }
         // Prune if we're not mature/fully grown wheat.
         BlockState s = mod.getWorld().getBlockState(blockPos);
         if (s.getBlock() instanceof CropBlock crop) {
             boolean mature = crop.isMature(s);
             if (_wasFullyGrown.contains(blockPos)) {
-                if (!mature) _wasFullyGrown.remove(blockPos);
+                if (!mature) {
+                    _wasFullyGrown.remove(blockPos);
+                }
             } else {
-                if (mature) _wasFullyGrown.add(blockPos);
+                if (mature) {
+                    _wasFullyGrown.add(blockPos);
+                }
             }
             return mature;
         }

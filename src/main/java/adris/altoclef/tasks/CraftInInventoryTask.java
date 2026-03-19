@@ -80,7 +80,8 @@ public class CraftInInventoryTask extends ResourceTask {
 
         ItemTarget toGet = itemTargets[0];
         Item toGetItem = toGet.getMatches()[0];
-        if (_collect && !StorageHelper.hasRecipeMaterialsOrTarget(mod, _target)) {
+        boolean hasMaterials = StorageHelper.hasRecipeMaterialsOrTarget(mod, _target);
+        if (_collect && !hasMaterials) {
             // Collect recipe materials
             setDebugState("Collecting materials");
             return collectRecipeSubTask(mod);
@@ -88,8 +89,9 @@ public class CraftInInventoryTask extends ResourceTask {
 
         // No need to free inventory, output gets picked up.
 
+        boolean useCraftingBook = mod.getModSettings().shouldUseCraftingBookToCraft();
         setDebugState("Crafting in inventory... for " + toGet);
-        return mod.getModSettings().shouldUseCraftingBookToCraft()
+        return useCraftingBook
                 ? new CraftGenericWithRecipeBooksTask(_target)
                 : new CraftGenericManuallyTask(_target);
     }

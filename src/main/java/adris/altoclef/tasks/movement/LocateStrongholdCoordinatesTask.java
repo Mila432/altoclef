@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.tasksystem.Task;
@@ -59,7 +58,6 @@ public class LocateStrongholdCoordinatesTask extends Task {
 
     @Override
     protected void onStart() {
-
     }
 
     public boolean isSearching() {
@@ -85,8 +83,6 @@ public class LocateStrongholdCoordinatesTask extends Task {
         // Handle thrown eye
         if (mod.getEntityTracker().entityFound(EyeOfEnderEntity.class)) {
             if (_currentThrownEye == null || !_currentThrownEye.isAlive()) {
-                Debug.logMessage("New eye direction");
-                Debug.logMessage(_currentThrownEye==null?"null":"is not alive");
                 List<EyeOfEnderEntity> enderEyes = mod.getEntityTracker().getTrackedEntities(EyeOfEnderEntity.class);
                 if (!enderEyes.isEmpty()) {
                     for (EyeOfEnderEntity enderEye : enderEyes) {
@@ -97,15 +93,31 @@ public class LocateStrongholdCoordinatesTask extends Task {
                     _cachedEyeDirection = null;
                     _cachedEyeDirection2 = null;
                 } else if (_cachedEyeDirection == null) {
-                    _cachedEyeDirection = new LocateStrongholdCoordinatesTask.EyeDirection(_currentThrownEye.getPos());
+                    //#if MC >= 12111
+                    _cachedEyeDirection = new LocateStrongholdCoordinatesTask.EyeDirection(_currentThrownEye.getEntityPos());
+                    //#else
+                    //$$ _cachedEyeDirection = new LocateStrongholdCoordinatesTask.EyeDirection(_currentThrownEye.getPos());
+                    //#endif
                 } else {
-                    _cachedEyeDirection2 = new LocateStrongholdCoordinatesTask.EyeDirection(_currentThrownEye.getPos());
+                    //#if MC >= 12111
+                    _cachedEyeDirection2 = new LocateStrongholdCoordinatesTask.EyeDirection(_currentThrownEye.getEntityPos());
+                    //#else
+                    //$$ _cachedEyeDirection2 = new LocateStrongholdCoordinatesTask.EyeDirection(_currentThrownEye.getPos());
+                    //#endif
                 }
             }
             if (_cachedEyeDirection2 != null) {
-                _cachedEyeDirection2.updateEyePos(_currentThrownEye.getPos());
+                //#if MC >= 12111
+                _cachedEyeDirection2.updateEyePos(_currentThrownEye.getEntityPos());
+                //#else
+                //$$ _cachedEyeDirection2.updateEyePos(_currentThrownEye.getPos());
+                //#endif
             } else if (_cachedEyeDirection != null) {
-                _cachedEyeDirection.updateEyePos(_currentThrownEye.getPos());
+                //#if MC >= 12111
+                _cachedEyeDirection.updateEyePos(_currentThrownEye.getEntityPos());
+                //#else
+                //$$ _cachedEyeDirection.updateEyePos(_currentThrownEye.getPos());
+                //#endif
             }
 
             if (mod.getEntityTracker().getClosestEntity(EyeOfEnderEntity.class).isPresent() &&
@@ -121,7 +133,6 @@ public class LocateStrongholdCoordinatesTask extends Task {
         // Calculate stronghold position
         if (_cachedEyeDirection2 != null && !mod.getEntityTracker().entityFound(EyeOfEnderEntity.class) && _strongholdEstimatePos == null) {
             if (_cachedEyeDirection2.getAngle() >= _cachedEyeDirection.getAngle()) {
-                Debug.logMessage("2nd eye thrown at wrong position, or points to different stronghold. Rethrowing");
                 _cachedEyeDirection = _cachedEyeDirection2;
                 _cachedEyeDirection2 = null;
             } else {
@@ -132,14 +143,28 @@ public class LocateStrongholdCoordinatesTask extends Task {
 
 
                 _strongholdEstimatePos = calculateIntersection(throwOrigin, throwDelta, throwOrigin2, throwDelta2); // stronghold estimate
-                Debug.logMessage("Stronghold is at " + (int) _strongholdEstimatePos.getX() + ", " + (int) _strongholdEstimatePos.getZ() + " (" + (int) mod.getPlayer().getPos().distanceTo(Vec3d.of(_strongholdEstimatePos)) + " blocks away)");
+                Debug.logMessage("Stronghold is at " + (int) _strongholdEstimatePos.getX() + ", " + (int) _strongholdEstimatePos.getZ() + " (" + (int)
+                    //#if MC >= 12111
+                    mod.getPlayer().getEntityPos()
+                    //#else
+                    //$$ mod.getPlayer().getPos()
+                    //#endif
+                    .distanceTo(Vec3d.of(_strongholdEstimatePos)) + " blocks away)");
             }
         }
 
 
         // Re-throw the eyes after reaching the estimation to get a more accurate estimate of where the stronghold is.
         if (_strongholdEstimatePos != null) {
-            if (((mod.getPlayer().getPos().distanceTo(Vec3d.of(_strongholdEstimatePos)) < EYE_RETHROW_DISTANCE) && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD)) {
+            double distanceToEstimate = 
+                //#if MC >= 12111
+                mod.getPlayer().getEntityPos()
+                //#else
+                //$$ mod.getPlayer().getPos()
+                //#endif
+                .distanceTo(Vec3d.of(_strongholdEstimatePos));
+            
+            if (distanceToEstimate < EYE_RETHROW_DISTANCE && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
                 _strongholdEstimatePos = null;
                 _cachedEyeDirection = null;
                 _cachedEyeDirection2 = null;
@@ -183,7 +208,6 @@ public class LocateStrongholdCoordinatesTask extends Task {
                     //MinecraftClient.getInstance().options.keyUse.setPressed(false);
                 }
             } else {
-                Debug.logWarning("Failed to equip eye of ender to throw.");
             }
             return null;
         } else if (_cachedEyeDirection != null && !_cachedEyeDirection.hasDelta() ||

@@ -38,7 +38,12 @@ public class PutOutFireTask extends Task {
     @Override
     public boolean isFinished() {
         BlockState s = AltoClef.getInstance().getWorld().getBlockState(_firePosition);
-        return (s.getBlock() != Blocks.FIRE && s.getBlock() != Blocks.SOUL_FIRE);
+        boolean isFire = (s.getBlock() == Blocks.FIRE);
+        boolean isSoulFire = (s.getBlock() == Blocks.SOUL_FIRE);
+        boolean finished = !isFire && !isSoulFire;
+        if (finished) {
+        }
+        return finished;
     }
 
     @Override

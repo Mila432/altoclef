@@ -28,6 +28,7 @@ public final class ClientInteractWithBlockMixin {
         //Debug.logMessage("(client) INTERACTED WITH: " + (hitResult != null? hitResult.getBlockPos() : "(nothing)"));
         if (hitResult != null) {
             EventBus.publish(new BlockInteractEvent(hitResult));
+        } else {
         }
 
     }

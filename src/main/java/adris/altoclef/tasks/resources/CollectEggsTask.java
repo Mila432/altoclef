@@ -49,7 +49,6 @@ public class CollectEggsTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(AltoClef mod, Task interruptTask) {
-
     }
 
     @Override

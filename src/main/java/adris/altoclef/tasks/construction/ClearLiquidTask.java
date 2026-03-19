@@ -26,7 +26,8 @@ public class ClearLiquidTask extends Task {
 
     @Override
     protected Task onTick() {
-        if (AltoClef.getInstance().getItemStorage().hasItem(Items.BUCKET)) {
+        boolean hasBucket = AltoClef.getInstance().getItemStorage().hasItem(Items.BUCKET);
+        if (hasBucket) {
             AltoClef.getInstance().getBehaviour().setRayTracingFluidHandling(RaycastContext.FluidHandling.SOURCE_ONLY);
             return new InteractWithBlockTask(new ItemTarget(Items.BUCKET, 1), _liquidPos, false);
         }
@@ -42,7 +43,8 @@ public class ClearLiquidTask extends Task {
     @Override
     public boolean isFinished() {
         if (AltoClef.getInstance().getChunkTracker().isChunkLoaded(_liquidPos)) {
-            return AltoClef.getInstance().getWorld().getBlockState(_liquidPos).getFluidState().isEmpty();
+            boolean isEmpty = AltoClef.getInstance().getWorld().getBlockState(_liquidPos).getFluidState().isEmpty();
+            return isEmpty;
         }
         return false;
     }

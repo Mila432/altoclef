@@ -1,6 +1,5 @@
 package adris.altoclef.trackers.storage;
 
-import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.BlockInteractEvent;
 import adris.altoclef.eventbus.events.ScreenOpenEvent;
@@ -92,7 +91,6 @@ public class ContainerSubTracker extends Tracker {
         // If we haven't registered interacting with a block, try the currently "looking at" block
         if (containerOpen && lastBlockPosInteraction == null && lastBlockInteraction == null) {
             if (MinecraftClient.getInstance().crosshairTarget instanceof BlockHitResult bhit) {
-                Debug.logWarning("Screen open but no block interaction detected, using the block we're currently looking at.");
                 lastBlockPosInteraction = bhit.getBlockPos();
                 lastBlockInteraction = mod.getWorld().getBlockState(lastBlockPosInteraction).getBlock();
             }
@@ -110,7 +108,6 @@ public class ContainerSubTracker extends Tracker {
                 ContainerType currentType = dimCache.get(containerPos).getContainerType();
                 if (!ContainerType.screenHandlerMatches(currentType, handler)) {
                     if (!hasSentError) {
-                        Debug.logMessage("Mismatched container screen at " + containerPos.toShortString() + ", will overwrite container data: " + handler.getType() + " ?=> " + currentType);
                         hasSentError = true;
                     }
                     dimCache.remove(containerPos);

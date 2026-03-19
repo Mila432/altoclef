@@ -11,6 +11,10 @@ public class SmeltTarget {
     private ItemTarget material;
 
     public SmeltTarget(ItemTarget item, ItemTarget material, Item... optionalMaterials) {
+        if (item == null) {
+        }
+        if (material == null) {
+        }
         this.item = item;
         this.material = material;
         this.material = new ItemTarget(material, this.item.getTargetCount());

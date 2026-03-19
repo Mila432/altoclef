@@ -23,6 +23,8 @@ public class ChunkPosDeserializer extends AbstractVectorDeserializer<ChunkPos, I
 
     @Override
     protected ChunkPos deserializeFromUnits(List<Integer> units) {
+        if (units.size() != 2) {
+        }
         return new ChunkPos(units.get(0), units.get(1));
     }
 

@@ -21,13 +21,14 @@ public class GetRidOfExtraWaterBucketTask extends Task {
     @Override
     protected Task onTick() {
         AltoClef mod = AltoClef.getInstance();
+        int waterCount = mod.getItemStorage().getItemCount(Items.WATER_BUCKET);
 
-        if (mod.getItemStorage().getItemCount(Items.WATER_BUCKET) != 0 && !needsPickup) {
+        if (waterCount != 0 && !needsPickup) {
             return new InteractWithBlockTask(new ItemTarget(Items.WATER_BUCKET, 1),mod.getPlayer().getBlockPos().down(), false);
         }
 
         needsPickup = true;
-        if (mod.getItemStorage().getItemCount(Items.WATER_BUCKET) < 1) {
+        if (waterCount < 1) {
             return new CollectBucketLiquidTask.CollectWaterBucketTask(1);
         }
 
@@ -36,7 +37,11 @@ public class GetRidOfExtraWaterBucketTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return AltoClef.getInstance().getItemStorage().getItemCount(Items.WATER_BUCKET) == 1 && needsPickup;
+        int waterCount = AltoClef.getInstance().getItemStorage().getItemCount(Items.WATER_BUCKET);
+        boolean finished = waterCount == 1 && needsPickup;
+        if (finished) {
+        }
+        return finished;
     }
 
     @Override

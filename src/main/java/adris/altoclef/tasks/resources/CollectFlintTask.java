@@ -37,8 +37,13 @@ public class CollectFlintTask extends ResourceTask {
     protected Task onResourceTick(AltoClef mod) {
 
         // We might just want to mine the closest gravel.
-        Optional<BlockPos> closest = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), validGravel -> WorldHelper.fallingBlockSafeToBreak(validGravel) && WorldHelper.canBreak(validGravel), Blocks.GRAVEL);
-        if (closest.isPresent() && closest.get().isWithinDistance(mod.getPlayer().getPos(), CLOSE_ENOUGH_FLINT)) {
+        //#if MC >= 12111
+        Optional<BlockPos> closest = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getEntityPos(), validGravel -> WorldHelper.fallingBlockSafeToBreak(validGravel) && WorldHelper.canBreak(validGravel), Blocks.GRAVEL);
+        if (closest.isPresent() && closest.get().isWithinDistance(mod.getPlayer().getEntityPos(), CLOSE_ENOUGH_FLINT)) {
+        //#else
+        //$$ Optional<BlockPos> closest = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), validGravel -> WorldHelper.fallingBlockSafeToBreak(validGravel) && WorldHelper.canBreak(validGravel), Blocks.GRAVEL);
+        //$$ if (closest.isPresent() && closest.get().isWithinDistance(mod.getPlayer().getPos(), CLOSE_ENOUGH_FLINT)) {
+        //#endif
             return new DoToClosestBlockTask(DestroyBlockTask::new, Blocks.GRAVEL);
         }
 

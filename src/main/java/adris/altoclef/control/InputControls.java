@@ -78,7 +78,8 @@ public class InputControls {
     // Before the user calls input commands for the frame
     public void onTickPre() {
         while (!toUnpress.isEmpty()) {
-            inputToKeyBinding(toUnpress.remove()).setPressed(false);
+            Input input = toUnpress.remove();
+            inputToKeyBinding(input).setPressed(false);
         }
     }
 

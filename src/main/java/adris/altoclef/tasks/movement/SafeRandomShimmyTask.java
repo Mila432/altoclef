@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.time.TimerGame;
@@ -33,26 +32,29 @@ public class SafeRandomShimmyTask extends Task {
     protected Task onTick() {
 
         if (_lookTimer.elapsed()) {
-            Debug.logMessage("Random Orientation");
             _lookTimer.reset();
             LookHelper.randomOrientation();
         }
 
         Baritone baritone = AltoClef.getInstance().getClientBaritone();
-
-        baritone.getInputOverrideHandler().setInputForceState(Input.SNEAK, true);
-        baritone.getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, true);
-        baritone.getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
+        if (baritone == null) {
+        } else {
+            baritone.getInputOverrideHandler().setInputForceState(Input.SNEAK, true);
+            baritone.getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, true);
+            baritone.getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
+        }
         return null;
     }
 
     @Override
     protected void onStop(Task interruptTask) {
         Baritone baritone = AltoClef.getInstance().getClientBaritone();
-
-        baritone.getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
-        baritone.getInputOverrideHandler().setInputForceState(Input.SNEAK, false);
-        baritone.getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
+        if (baritone == null) {
+        } else {
+            baritone.getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
+            baritone.getInputOverrideHandler().setInputForceState(Input.SNEAK, false);
+            baritone.getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
+        }
     }
 
     @Override

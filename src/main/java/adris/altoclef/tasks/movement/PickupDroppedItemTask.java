@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasks.AbstractDoToClosestObjectTask;
 import adris.altoclef.tasks.resources.SatisfyMiningRequirementTask;
 import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
@@ -190,13 +189,10 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
             if (_currentDrop != null && !_currentDrop.getStack().isEmpty()) {
                 // We might want to get a pickaxe first.
                 if (!isGettingPickaxeFirstFlag && mod.getModSettings().shouldCollectPickaxeFirst() && !StorageHelper.miningRequirementMetInventory(MiningRequirement.STONE)) {
-                    Debug.logMessage("Failed to pick up drop, will try to collect a stone pickaxe first and try again!");
                     _collectingPickaxeForThisResource = true;
                     isGettingPickaxeFirstFlag = true;
                     return getPickaxeFirstTask;
                 }
-                Debug.logMessage(StlHelper.toString(_blacklist, element -> element == null ? "(null)" : element.getStack().getItem().getTranslationKey()));
-                Debug.logMessage("Failed to pick up drop, suggesting it's unreachable.");
                 _blacklist.add(_currentDrop);
                 mod.getEntityTracker().requestEntityUnreachable(_currentDrop);
                 return wanderTask;
@@ -237,11 +233,23 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
             // Assume we'll land down one or two blocks from here. We could do this more advanced but whatever.
             BlockPos p = obj.getBlockPos();
             if (!WorldHelper.isSolidBlock(p.down(3))) {
-                return obj.getPos().subtract(0, 2, 0);
+                //#if MC >= 12111
+                return obj.getEntityPos().subtract(0, 2, 0);
+                //#else
+                //$$ return obj.getPos().subtract(0, 2, 0);
+                //#endif
             }
-            return obj.getPos().subtract(0, 1, 0);
+            //#if MC >= 12111
+            return obj.getEntityPos().subtract(0, 1, 0);
+            //#else
+            //$$ return obj.getPos().subtract(0, 1, 0);
+            //#endif
         }
-        return obj.getPos();
+        //#if MC >= 12111
+        return obj.getEntityPos();
+        //#else
+        //$$ return obj.getPos();
+        //#endif
     }
 
     @Override
@@ -253,7 +261,11 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
     @Override
     protected Vec3d getOriginPos(AltoClef mod) {
-        return mod.getPlayer().getPos();
+        //#if MC >= 12111
+        return mod.getPlayer().getEntityPos();
+        //#else
+        //$$ return mod.getPlayer().getPos();
+        //#endif
     }
 
     @Override
@@ -262,7 +274,6 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
             _currentDrop = itemEntity;
             progressChecker.reset();
             if (isGettingPickaxeFirstFlag && _collectingPickaxeForThisResource) {
-                Debug.logMessage("New goal, no longer collecting a pickaxe.");
                 _collectingPickaxeForThisResource = false;
                 isGettingPickaxeFirstFlag = false;
             }

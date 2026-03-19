@@ -7,7 +7,9 @@ public class DamageSourceWrapper {
 
 
     public static DamageSourceWrapper of(DamageSource source) {
-        if (source == null) return null;
+        if (source == null) {
+            return null;
+        }
 
         return new DamageSourceWrapper(source);
     }

@@ -1,12 +1,11 @@
 package adris.altoclef.butler;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.util.time.TimerGame;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import adris.altoclef.AltoClef;
 
 public class WhisperChecker {
 
@@ -62,7 +61,6 @@ public class WhisperChecker {
         boolean duplicate = (msg.equals(_lastMessage));
         if (duplicate && !_repeatTimer.elapsed()) {
             _repeatTimer.reset();
-            // It's probably an actual duplicate. IDK why we get those but yeah.
             return null;
         }
 
@@ -73,7 +71,9 @@ public class WhisperChecker {
             if (check != null) {
                 String user = check.from;
                 String message = check.message;
-                if (user == null || message == null) break;
+                if (user == null || message == null) {
+                    break;
+                }
                 return check;
             }
         }

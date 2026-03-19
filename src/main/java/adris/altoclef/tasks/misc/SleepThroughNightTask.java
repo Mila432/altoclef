@@ -7,7 +7,6 @@ public class SleepThroughNightTask extends Task {
 
     @Override
     protected void onStart() {
-
     }
 
     @Override
@@ -17,7 +16,9 @@ public class SleepThroughNightTask extends Task {
 
     @Override
     protected void onStop(Task interruptTask) {
-
+        if (interruptTask != null) {
+        } else {
+        }
     }
 
     @Override
@@ -34,6 +35,9 @@ public class SleepThroughNightTask extends Task {
     public boolean isFinished() {
         // We're in daytime
         int time = (int) (AltoClef.getInstance().getWorld().getTimeOfDay() % 24000);
-        return 0 <= time && time < 13000;
+        boolean finished = 0 <= time && time < 13000;
+        if (finished) {
+        }
+        return finished;
     }
 }

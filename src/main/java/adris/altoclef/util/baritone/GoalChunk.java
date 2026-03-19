@@ -10,6 +10,8 @@ public class GoalChunk implements Goal {
 
     public GoalChunk(ChunkPos pos) {
         this.pos = pos;
+        if (pos == null) {
+        }
     }
 
     @Override

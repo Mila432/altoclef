@@ -1,7 +1,6 @@
 package adris.altoclef.control;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
@@ -18,6 +17,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+//#if MC >= 12111
+import adris.altoclef.multiversion.ToolMaterialVer;
+//#endif
 
 
 public class SlotHandler {
@@ -79,7 +82,6 @@ public class SlotHandler {
         try {
             mod.getController().clickSlot(syncId, windowSlot, mouseButton, type, player);
         } catch (Exception e) {
-            Debug.logWarning("Slot Click Error (ignored)");
             e.printStackTrace();
         }
     }
@@ -105,7 +107,11 @@ public class SlotHandler {
         if (StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem() == toEquip) return true;
 
         // Always equip to the second slot. First + last is occupied by baritone.
-        mod.getPlayer().getInventory().selectedSlot = 1;
+        //#if MC >= 12111
+        mod.getPlayer().getInventory().setSelectedSlot(1);
+        //#else
+        //$$ mod.getPlayer().getInventory().selectedSlot = 1;
+        //#endif
 
         // If our item is in our cursor, simply move it to the hotbar.
         boolean inCursor = StorageHelper.getItemStackInSlot(CursorSlot.SLOT).getItem() == toEquip;
@@ -124,13 +130,17 @@ public class SlotHandler {
     }
 
     public boolean forceDeequipHitTool() {
-        return forceDeequip(stack -> stack.getItem() instanceof ToolItem);
+        //#if MC >= 12111
+        return forceDeequip(stack -> ToolMaterialVer.isTool(stack.getItem()));
+        //#else
+        //$$ return forceDeequip(stack -> stack.getItem() instanceof ToolItem);
+        //#endif
     }
 
     public void forceDeequipRightClickableItem() {
         forceDeequip(stack -> {
                     Item item = stack.getItem();
-                    return item instanceof BucketItem // water,lava,milk,fishes
+                    boolean isRightClickable = item instanceof BucketItem // water,lava,milk,fishes
                             || item instanceof EnderEyeItem
                             || item == Items.BOW
                             || item == Items.CROSSBOW
@@ -148,9 +158,12 @@ public class SlotHandler {
                             || item instanceof OnAStickItem
                             || item == Items.COMPASS
                             || item instanceof EmptyMapItem
-                            || item instanceof Equipment
+                            //#if MC < 12111
+                            //$$ || item instanceof Equipment
+                            //#endif
                             || item == Items.LEAD
                             || item == Items.SHIELD;
+                    return isRightClickable;
                 }
         );
     }
@@ -164,7 +177,9 @@ public class SlotHandler {
     public boolean forceDeequip(Predicate<ItemStack> isBad) {
         ItemStack equip = StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot());
         ItemStack cursor = StorageHelper.getItemStackInSlot(CursorSlot.SLOT);
-        if (isBad.test(cursor)) {
+        boolean cursorBad = isBad.test(cursor);
+        boolean equipBad = isBad.test(equip);
+        if (cursorBad) {
             // Throw away cursor slot OR move
             Optional<Slot> fittableSlots = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(equip, false);
             if (fittableSlots.isEmpty()) {
@@ -186,7 +201,7 @@ public class SlotHandler {
                 clickSlotForce(fittableSlots.get(), 0, SlotActionType.PICKUP);
                 return true;
             }
-        } else if (isBad.test(equip)) {
+        } else if (equipBad) {
             // Pick up the item
             clickSlotForce(PlayerSlot.getEquipSlot(), 0, SlotActionType.PICKUP);
             return false;
@@ -236,7 +251,11 @@ public class SlotHandler {
     public void refreshInventory() {
         if (MinecraftClient.getInstance().player == null)
             return;
-        for (int i = 0; i < MinecraftClient.getInstance().player.getInventory().main.size(); ++i) {
+        //#if MC >= 12111
+        for (int i = 0; i < MinecraftClient.getInstance().player.getInventory().getMainStacks().size(); ++i) {
+        //#else
+        //$$ for (int i = 0; i < MinecraftClient.getInstance().player.getInventory().main.size(); ++i) {
+        //#endif
             Slot slot = Slot.getFromCurrentScreenInventory(i);
             clickSlotForce(slot, 0, SlotActionType.PICKUP);
             clickSlotForce(slot, 0, SlotActionType.PICKUP);

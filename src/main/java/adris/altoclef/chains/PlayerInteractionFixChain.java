@@ -1,7 +1,6 @@
 package adris.altoclef.chains;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.TaskChain;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.helpers.ItemHelper;
@@ -28,7 +27,7 @@ public class PlayerInteractionFixChain extends TaskChain {
     private final TimerGame stackHeldTimeout = new TimerGame(1);
     private final TimerGame generalDuctTapeSwapTimeout = new TimerGame(30);
     private final TimerGame shiftDepressTimeout = new TimerGame(10);
-    private final TimerGame betterToolTimer = new TimerGame(0);
+    private final TimerGame betterToolTimer = new TimerGame(2.5);
     private final TimerGame mouseMovingButScreenOpenTimeout = new TimerGame(1);
     private ItemStack lastHandStack = null;
 
@@ -72,13 +71,15 @@ public class PlayerInteractionFixChain extends TaskChain {
                 if (bestToolSlot.isPresent() && !bestToolSlot.get().equals(currentEquipped)) {
                     // ONLY equip if the item class is STRICTLY different (otherwise we swap around a lot)
                     if (StorageHelper.getItemStackInSlot(currentEquipped).getItem() != StorageHelper.getItemStackInSlot(bestToolSlot.get()).getItem()) {
-                        boolean isAllowedToManage = (!mod.getClientBaritone().getPathingBehavior().isPathing() ||
-                                bestToolSlot.get().getInventorySlot() >= 9) && !mod.getFoodChain().isTryingToEat();
+                        boolean isBaritonePathing = mod.getClientBaritone().getPathingBehavior().isPathing();
+                        int bestToolInventorySlot = bestToolSlot.get().getInventorySlot();
+                        boolean isTryingToEat = mod.getFoodChain().isTryingToEat();
+                        boolean isAllowedToManage = (!isBaritonePathing || bestToolInventorySlot >= 9) && !isTryingToEat;
                         if (isAllowedToManage) {
-                            Debug.logMessage("Found better tool in inventory, equipping.");
                             ItemStack bestToolItemStack = StorageHelper.getItemStackInSlot(bestToolSlot.get());
                             Item bestToolItem = bestToolItemStack.getItem();
                             mod.getSlotHandler().forceEquipItem(bestToolItem);
+                        } else {
                         }
                     }
                 }
@@ -97,7 +98,6 @@ public class PlayerInteractionFixChain extends TaskChain {
         // Refresh inventory
         if (generalDuctTapeSwapTimeout.elapsed()) {
             if (!mod.getControllerExtras().isBreakingBlock()) {
-                Debug.logMessage("Refreshed inventory...");
                 mod.getSlotHandler().refreshInventory();
                 generalDuctTapeSwapTimeout.reset();
                 return Float.NEGATIVE_INFINITY;
@@ -125,7 +125,9 @@ public class PlayerInteractionFixChain extends TaskChain {
                 mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                 return Float.NEGATIVE_INFINITY;
             }
-            if (ItemHelper.canThrowAwayStack(mod, StorageHelper.getItemStackInCursorSlot())) {
+            ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
+            boolean canThrowAway = ItemHelper.canThrowAwayStack(mod, cursorStack);
+            if (canThrowAway) {
                 mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                 return Float.NEGATIVE_INFINITY;
             }
@@ -148,7 +150,8 @@ public class PlayerInteractionFixChain extends TaskChain {
                     mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                     return Float.NEGATIVE_INFINITY;
                 }
-                if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
+                boolean canThrowAway = ItemHelper.canThrowAwayStack(mod, cursorStack);
+                if (canThrowAway) {
                     mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     return Float.NEGATIVE_INFINITY;
                 }
@@ -186,7 +189,9 @@ public class PlayerInteractionFixChain extends TaskChain {
         Rotation look = LookHelper.getLookRotation();
         if (lastLookRotation != null && mouseMovingButScreenOpenTimeout.elapsed()) {
             Rotation delta = look.subtract(lastLookRotation);
-            if (Math.abs(delta.getYaw()) > 0.1f || Math.abs(delta.getPitch()) > 0.1f) {
+            float yawDelta = Math.abs(delta.getYaw());
+            float pitchDelta = Math.abs(delta.getPitch());
+            if (yawDelta > 0.1f || pitchDelta > 0.1f) {
                 lastLookRotation = look;
                 return true;
             }

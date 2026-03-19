@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.construction.compound;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
@@ -153,8 +152,9 @@ public class ConstructNetherPortalObsidianTask extends Task {
         if (origin == null) {
             if (_areaSearchTimer.elapsed()) {
                 _areaSearchTimer.reset();
-                Debug.logMessage("(Searching for area to build portal nearby...)");
                 origin = getBuildableAreaNearby(mod);
+                if (origin != null) {
+                }
             }
             setDebugState("Looking for portalable area...");
             return new TimeoutWanderTask();

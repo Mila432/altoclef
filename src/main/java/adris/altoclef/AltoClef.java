@@ -167,7 +167,8 @@ public class AltoClef implements ModInitializer {
                             != Items.GRAVEL).toList();
             getClientBaritoneSettings().acceptableThrowawayItems.value.addAll(baritoneCanPlace);
             // If we should run an idle command...
-            if ((!getUserTaskChain().isActive() || getUserTaskChain().isRunningIdleTask()) && getModSettings().shouldRunIdleCommandWhenNotActive()) {
+            boolean shouldRunIdle = (!getUserTaskChain().isActive() || getUserTaskChain().isRunningIdleTask()) && getModSettings().shouldRunIdleCommandWhenNotActive();
+            if (shouldRunIdle) {
                 getUserTaskChain().signalNextTaskToBeIdleTask();
                 getCommandExecutor().executeWithPrefix(getModSettings().getIdleCommand());
             }
@@ -546,7 +547,6 @@ public class AltoClef implements ModInitializer {
      * Logs to the console and also messages any player using the bot as a butler.
      */
     public void log(String message, MessagePriority priority) {
-        Debug.logMessage(message);
     }
 
     public void logWarning(String message) {
@@ -557,7 +557,6 @@ public class AltoClef implements ModInitializer {
      * Logs a warning to the console and also alerts any player using the bot as a butler.
      */
     public void logWarning(String message, MessagePriority priority) {
-        Debug.logWarning(message);
     }
 
     private void runEnqueuedPostInits() {

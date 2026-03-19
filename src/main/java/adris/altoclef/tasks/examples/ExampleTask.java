@@ -63,9 +63,10 @@ public class ExampleTask extends Task {
     @Override
     public boolean isFinished() {
         AltoClef mod = AltoClef.getInstance();
-
-        return mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) >= numberOfStonePickaxesToGrab &&
-                mod.getWorld().getBlockState(whereToPlaceCobblestone).getBlock() == Blocks.COBBLESTONE;
+        boolean hasEnoughPickaxes = mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) >= numberOfStonePickaxesToGrab;
+        boolean cobblestonePlaced = mod.getWorld().getBlockState(whereToPlaceCobblestone).getBlock() == Blocks.COBBLESTONE;
+        
+        return hasEnoughPickaxes && cobblestonePlaced;
     }
 
     @Override

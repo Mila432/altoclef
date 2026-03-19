@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.multiversion.versionedfields.Blocks;
 import adris.altoclef.tasks.entity.KillEntitiesTask;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
@@ -135,7 +134,11 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
 
         timer.reset();
         mod.getClientBaritone().getPathingBehavior().forceCancel();
-        origin = mod.getPlayer().getPos();
+        //#if MC >= 12111
+        origin = mod.getPlayer().getEntityPos();
+        //#else
+        //$$ origin = mod.getPlayer().getPos();
+        //#endif
         progressChecker.reset();
         stuckCheck.reset();
         failCounter = 0;
@@ -192,8 +195,14 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         if (!progressChecker.check(mod) || !stuckCheck.check(mod)) {
             List<Entity> closeEntities = mod.getEntityTracker().getCloseEntities();
             for (Entity CloseEntities : closeEntities) {
+                //#if MC >= 12111
                 if (CloseEntities instanceof MobEntity &&
-                        CloseEntities.getPos().isInRange(mod.getPlayer().getPos(), 1)) {
+                        CloseEntities.getEntityPos().isInRange(mod.getPlayer().getEntityPos(), 1)) {
+                //#else
+                //$$ if (CloseEntities instanceof MobEntity &&
+                //$$         CloseEntities.getPos().isInRange(mod.getPlayer().getPos(), 1)) {
+                //$$     Debug.logMessage("Found mob entity within 1 block, will kill: entity=" + CloseEntities + ", distance=" + CloseEntities.getPos().distanceTo(mod.getPlayer().getPos()));
+                //#endif
                     setDebugState("Killing annoying entity.");
                     return new KillEntitiesTask(CloseEntities.getClass());
                 }
@@ -228,7 +237,6 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
             progressChecker.reset();
             if (!_forceExplore) {
                 failCounter++;
-                Debug.logMessage("Failed exploring.");
             }
         }
         return null;
@@ -240,7 +248,6 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         if (isFinished()) {
             if (increaseRange) {
                 _wanderDistanceExtension += distanceToWander;
-                Debug.logMessage("Increased wander range");
             }
         }
     }
@@ -259,11 +266,20 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
 
         ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
 
-        if (player != null && player.getPos() != null && (player.isOnGround() ||
+        //#if MC >= 12111
+        if (player != null && player.getEntityPos() != null && (player.isOnGround() ||
                 player.isTouchingWater())) {
-            double sqDist = player.getPos().squaredDistanceTo(origin);
+            double sqDist = player.getEntityPos().squaredDistanceTo(origin);
+        //#else
+        //$$ if (player != null && player.getPos() != null && (player.isOnGround() ||
+        //$$         player.isTouchingWater())) {
+        //$$     double sqDist = player.getPos().squaredDistanceTo(origin);
+        //#endif
             double toWander = distanceToWander + _wanderDistanceExtension;
-            return sqDist > toWander * toWander;
+            boolean finished = sqDist > toWander * toWander;
+            if (finished) {
+            }
+            return finished;
         } else {
             return false;
         }

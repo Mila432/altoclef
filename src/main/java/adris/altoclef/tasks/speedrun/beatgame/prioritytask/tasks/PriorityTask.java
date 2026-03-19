@@ -22,7 +22,10 @@ public abstract class PriorityTask {
     }
 
     public final double calculatePriority(AltoClef mod) {
-        if (!canCall.apply(mod)) return Double.NEGATIVE_INFINITY;
+        boolean canExecute = canCall.apply(mod);
+        if (!canExecute) {
+            return Double.NEGATIVE_INFINITY;
+        }
 
         return getPriority(mod);
     }

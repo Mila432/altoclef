@@ -62,18 +62,25 @@ public class MineBlockPriorityTask extends PriorityTask{
 
     @Override
     protected double getPriority(AltoClef mod) {
-        if (!StorageHelper.miningRequirementMet(miningRequirement)) return Double.NEGATIVE_INFINITY;
+        if (!StorageHelper.miningRequirementMet(miningRequirement)) {
+            return Double.NEGATIVE_INFINITY;
+        }
 
         double closestDist = getClosestDist(mod);
         int itemCount = mod.getItemStorage().getItemCount(droppedItem);
 
         prioritySupplier.update(itemCount);
-        return prioritySupplier.getPriority(closestDist);
+        double priority = prioritySupplier.getPriority(closestDist);
+        return priority;
     }
 
 
     private double getClosestDist(AltoClef mod) {
-        Vec3d pos = mod.getPlayer().getPos();
+        //#if MC >= 12111
+        Vec3d pos = mod.getPlayer().getEntityPos();
+        //#else
+        //$$ Vec3d pos = mod.getPlayer().getPos();
+        //#endif
 
         Pair<Double, Optional<BlockPos>> closestBlock = MineAndCollectTask.MineOrCollectTask.getClosestBlock(mod,pos,  toMine);
         Pair<Double, Optional<ItemEntity>> closestDrop = MineAndCollectTask.MineOrCollectTask.getClosestItemDrop(mod,pos, droppedItemTargets);

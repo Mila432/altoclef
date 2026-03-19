@@ -1,6 +1,7 @@
 package adris.altoclef.util.helpers;
 
 import adris.altoclef.AltoClef;
+import adris.altoclef.Debug; // Added import
 import adris.altoclef.mixins.ClientConnectionAccessor;
 import adris.altoclef.multiversion.MethodWrapper;
 import adris.altoclef.multiversion.world.WorldVer;
@@ -22,9 +23,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.util.math.*;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.registry.RegistryKey;
 
 //#if MC >= 11802
 import net.minecraft.registry.entry.RegistryEntry;
@@ -45,11 +48,16 @@ public interface WorldHelper {
      */
     static int getTicks() {
         ClientConnection con = Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).getConnection();
+        if (con == null) {
+            return 0;
+        }
         return ((ClientConnectionAccessor) con).getTicks();
     }
 
     static Vec3d toVec3d(BlockPos pos) {
-        if (pos == null) return null;
+        if (pos == null) {
+            return null;
+        }
         return new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
     }
 
@@ -67,6 +75,9 @@ public interface WorldHelper {
 
     static boolean isSourceBlock(BlockPos pos, boolean onlyAcceptStill) {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return false;
+        }
 
         BlockState s = world.getBlockState(pos);
         if (s.getBlock() instanceof FluidBlock) {
@@ -99,7 +110,7 @@ public interface WorldHelper {
     }
 
     static boolean inRangeXZ(Entity entity, Vec3d to, double range) {
-        return inRangeXZ(entity.getPos(), to, range);
+        return inRangeXZ(getEntityPosition(entity), to, range);
     }
 
     static boolean inRangeXZ(Entity entity, BlockPos to, double range) {
@@ -107,15 +118,24 @@ public interface WorldHelper {
     }
 
     static boolean inRangeXZ(Entity entity, Entity to, double range) {
-        return inRangeXZ(entity, to.getPos(), range);
+        return inRangeXZ(entity, getEntityPosition(to), range);
     }
 
     static Dimension getCurrentDimension() {
         ClientWorld world = MinecraftClient.getInstance().world;
-        if (world == null) return Dimension.OVERWORLD;
-        if (world.getDimension().ultrawarm()) return Dimension.NETHER;
-        if (world.getDimension().natural()) return Dimension.OVERWORLD;
+        if (world == null) {
+            return Dimension.OVERWORLD;
+        }
+        //#if MC >= 12111
+        RegistryKey<World> registryKey = world.getRegistryKey();
+        if (registryKey.equals(World.NETHER)) return Dimension.NETHER;
+        if (registryKey.equals(World.OVERWORLD)) return Dimension.OVERWORLD;
         return Dimension.END;
+        //#else
+        //$$ if (world.getDimension().ultrawarm()) return Dimension.NETHER;
+        //$$ if (world.getDimension().natural()) return Dimension.OVERWORLD;
+        //$$ return Dimension.END;
+        //#endif
     }
 
     /**
@@ -128,6 +148,9 @@ public interface WorldHelper {
      */
     static boolean isSolidBlock(BlockPos pos) {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return false;
+        }
 
         return world.getBlockState(pos).isSolidBlock(world, pos);
     }
@@ -137,6 +160,9 @@ public interface WorldHelper {
      */
     static BlockPos getBedHead(BlockPos posWithBed) {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return null;
+        }
 
         BlockState state = world.getBlockState(posWithBed);
         if (state.getBlock() instanceof BedBlock) {
@@ -154,6 +180,9 @@ public interface WorldHelper {
      */
     static BlockPos getBedFoot(BlockPos posWithBed) {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return null;
+        }
 
         BlockState state = world.getBlockState(posWithBed);
         if (state.getBlock() instanceof BedBlock) {
@@ -193,8 +222,16 @@ public interface WorldHelper {
 
     static int getGroundHeight(int x, int z) {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return -1;
+        }
 
-        for (int y = world.getTopY(); y >= world.getBottomY(); --y) {
+        //#if MC >= 12111
+        int topY = world.getTopY(Heightmap.Type.WORLD_SURFACE, x, z);
+        //#else
+        //$$ int topY = WorldVer.getTopY(world);
+        //#endif
+        for (int y = topY; y >= world.getBottomY(); --y) {
             BlockPos check = new BlockPos(x, y, z);
             if (isSolidBlock(check)) return y;
         }
@@ -203,6 +240,9 @@ public interface WorldHelper {
 
     static BlockPos getADesertTemple() {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return null;
+        }
 
         List<BlockPos> stonePressurePlates = AltoClef.getInstance().getBlockScanner().getKnownLocations(Blocks.STONE_PRESSURE_PLATE);
         if (!stonePressurePlates.isEmpty()) {
@@ -223,9 +263,19 @@ public interface WorldHelper {
 
     static int getGroundHeight(int x, int z, Block... groundBlocks) {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return -1;
+        }
 
         Set<Block> possibleBlocks = new HashSet<>(Arrays.asList(groundBlocks));
-        for (int y = world.getTopY(); y >= world.getBottomY(); --y) {
+        if (possibleBlocks.isEmpty()) {
+        }
+        //#if MC >= 12111
+        int topY = world.getTopY(Heightmap.Type.WORLD_SURFACE, x, z);
+        //#else
+        //$$ int topY = WorldVer.getTopY(world);
+        //#endif
+        for (int y = topY; y >= world.getBottomY(); --y) {
             BlockPos check = new BlockPos(x, y, z);
             if (possibleBlocks.contains(world.getBlockState(check).getBlock())) return y;
 
@@ -235,6 +285,9 @@ public interface WorldHelper {
 
     static boolean canBreak(BlockPos pos) {
         AltoClef altoClef = AltoClef.getInstance();
+        if (altoClef.getWorld() == null) {
+            return false;
+        }
 
         // JANK: Temporarily check if we can break WITHOUT paused interactions.
         // Not doing this creates bugs where we loop back and forth through the nether portal and stuff.
@@ -242,11 +295,12 @@ public interface WorldHelper {
 
         altoClef.getExtraBaritoneSettings().setInteractionPaused(false);
 
-        boolean canBreak = altoClef.getWorld().getBlockState(pos).getHardness(altoClef.getWorld(), pos) >= 0
-                && !altoClef.getExtraBaritoneSettings().shouldAvoidBreaking(pos)
-                && MineProcess.plausibleToBreak(new CalculationContext(altoClef.getClientBaritone()), pos)
-                && canReach(pos);
-
+        boolean hardnessOk = altoClef.getWorld().getBlockState(pos).getHardness(altoClef.getWorld(), pos) >= 0;
+        boolean shouldAvoidBreaking = altoClef.getExtraBaritoneSettings().shouldAvoidBreaking(pos);
+        boolean plausibleToBreak = MineProcess.plausibleToBreak(new CalculationContext(altoClef.getClientBaritone()), pos);
+        boolean reachable = canReach(pos);
+        boolean canBreak = hardnessOk && !shouldAvoidBreaking && plausibleToBreak && reachable;
+    
         altoClef.getExtraBaritoneSettings().setInteractionPaused(prevInteractionPaused);
 
         return canBreak;
@@ -254,14 +308,17 @@ public interface WorldHelper {
 
     static boolean isInNetherPortal() {
         ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
-
-        if (player == null)
+        if (player == null) {
             return false;
+        }
         return adris.altoclef.multiversion.entity.EntityHelper.isInNetherPortal(player);
     }
 
     static boolean dangerousToBreakIfRightAbove(BlockPos toBreak) {
         AltoClef altoClef = AltoClef.getInstance();
+        if (altoClef.getWorld() == null) {
+            return true; // Assume dangerous if world is null
+        }
 
         // There might be mumbo jumbo next to it, we fall and we get killed by lava or something.
         if (MovementHelper.avoidBreaking(altoClef.getClientBaritone().bsi, toBreak.getX(), toBreak.getY(), toBreak.getZ(), altoClef.getWorld().getBlockState(toBreak))) {
@@ -273,14 +330,18 @@ public interface WorldHelper {
             BlockState s = altoClef.getWorld().getBlockState(check);
             boolean tooFarToFall = dy > altoClef.getClientBaritoneSettings().maxFallHeightNoWater.value;
             // Don't fall in lava
-            if (MovementHelper.isLava(s))
+            if (MovementHelper.isLava(s)) {
                 return true;
+            }
             // Always fall in water
             // TODO: If there's a 1 meter thick layer of water and then a massive drop below, the bot will think it is safe.
-            if (MovementHelper.isWater(s))
+            if (MovementHelper.isWater(s)) {
                 return true;
+            }
             // We hit ground, depends
             if (WorldHelper.isSolidBlock(check)) {
+                if (tooFarToFall) {
+                }
                 return tooFarToFall;
             }
         }
@@ -295,6 +356,12 @@ public interface WorldHelper {
 
     static boolean canReach(BlockPos pos) {
         AltoClef altoClef = AltoClef.getInstance();
+        if (altoClef.getPlayer() == null) {
+            return false;
+        }
+        if (altoClef.getWorld() == null) {
+            return false;
+        }
 
         if (altoClef.getModSettings().shouldAvoidOcean()) {
             // 45 is roughly the ocean floor. We add 2 just cause why not.
@@ -349,11 +416,19 @@ public interface WorldHelper {
     }
 
     static boolean isInsidePlayer(BlockPos pos) {
-        return pos.isWithinDistance(AltoClef.getInstance().getPlayer().getPos(), 2);
+        ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
+        if (player == null) {
+            return false;
+        }
+        return pos.isWithinDistance(getEntityPosition(player), 2);
     }
 
     static Iterable<BlockPos> getBlocksTouchingPlayer() {
-        return getBlocksTouchingBox(AltoClef.getInstance().getPlayer().getBoundingBox());
+        ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
+        if (player == null) {
+            return Collections.emptyList();
+        }
+        return getBlocksTouchingBox(player.getBoundingBox());
     }
 
     static Iterable<BlockPos> getBlocksTouchingBox(Box box) {
@@ -408,12 +483,17 @@ public interface WorldHelper {
 
     static Entity getSpawnerEntity(BlockPos pos) {
         ClientWorld world = AltoClef.getInstance().getWorld();
+        if (world == null) {
+            return null;
+        }
 
         BlockState state = world.getBlockState(pos);
         if (state.getBlock() instanceof SpawnerBlock) {
             BlockEntity be = world.getBlockEntity(pos);
             if (be instanceof MobSpawnerBlockEntity blockEntity) {
                 return MethodWrapper.getRenderedEntity(blockEntity.getLogic(), world, pos);
+            } else if (be == null) {
+            } else {
             }
         }
         return null;
@@ -472,6 +552,9 @@ public interface WorldHelper {
 
     static boolean isVulnerable() {
         ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
+        if (player == null) {
+            return true; // Assume vulnerable if player is null
+        }
 
         int armor = player.getArmor();
         float health = player.getHealth();
@@ -490,6 +573,9 @@ public interface WorldHelper {
     // Function to check if the player is surrounded on two or more sides
     static boolean isSurrounded(List<LivingEntity> entities) {
         ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
+        if (player == null) {
+            return false;
+        }
 
         BlockPos playerPos = player.getBlockPos();
 
@@ -515,7 +601,10 @@ public interface WorldHelper {
         }
 
         // Check if the origin is surrounded on two or more sides
-        return uniqueSides.size() >= MIN_SIDES_TO_SURROUND;
+        boolean surrounded = uniqueSides.size() >= MIN_SIDES_TO_SURROUND;
+        if (surrounded) {
+        }
+        return surrounded;
     }
 
     private static double calculateAngle(BlockPos origin, BlockPos target) {
@@ -547,5 +636,14 @@ public interface WorldHelper {
         }
     }
 
+    //#if MC >= 12111
+    private static Vec3d getEntityPosition(Entity entity) {
+        return entity.getEntityPos();
+    }
+    //#else
+    //$$ private static Vec3d getEntityPosition(Entity entity) {
+    //$$     return entity.getPos();
+    //$$ }
+    //#endif
 
 }

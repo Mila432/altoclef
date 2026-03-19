@@ -23,6 +23,8 @@ public class CollectWoodenPressurePlateTask extends CraftWithMatchingPlanksTask 
 
 
     private static CraftingRecipe createRecipe(ItemTarget planks) {
+        if (planks == null) {
+        }
         ItemTarget p = planks;
         return CraftingRecipe.newShapedRecipe(new ItemTarget[]{p, p, null, null}, 1);
     }

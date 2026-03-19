@@ -48,7 +48,8 @@ public class LootDesertTempleTask extends Task {
         }
         if (looted < 4) {
             setDebugState("Looting a desert temple chest");
-            lootTask = new LootContainerTask(temple.add(CHEST_POSITIONS_RELATIVE[looted]), wanted);
+            BlockPos chestPos = temple.add(CHEST_POSITIONS_RELATIVE[looted]);
+            lootTask = new LootContainerTask(chestPos, wanted);
             return lootTask;
         }
         setDebugState("Why is this still running? Report this");

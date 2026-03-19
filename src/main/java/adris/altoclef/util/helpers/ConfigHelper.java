@@ -1,6 +1,5 @@
 package adris.altoclef.util.helpers;
 
-import adris.altoclef.Debug;
 import adris.altoclef.util.serialization.*;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -60,16 +59,15 @@ public class ConfigHelper {
         try {
             result = mapper.readValue(loadFrom, classToLoad);
         } catch (JsonMappingException ex) {
-            Debug.logError("Failed to parse Config file of type " + classToLoad.getSimpleName() + "at " + path + ". JSON Error Message: " + ex.getMessage() + ".\n JSON Error STACK TRACE:\n\n",ex);
             if (result instanceof IFailableConfigFile failable)
                 failable.failedToLoad();
             failed = true;
         } catch (IOException e) {
-            Debug.logError("Failed to read Config at " + path + ".", e);
             if (result instanceof IFailableConfigFile failable)
                 failable.failedToLoad();
             failed = true;
         }
+
 
         // Save over to include NEW settings
         // but only if a load was successful. Don't want to override user settings!
@@ -109,7 +107,6 @@ public class ConfigHelper {
 
             mapper.writer(prettyPrinter).writeValue(toSave, config);
         } catch (IOException e) {
-            Debug.logError("Failed to save config!",e);
         }
     }
 
@@ -136,7 +133,6 @@ public class ConfigHelper {
             }
             sc.close();
         } catch (IOException e) {
-            Debug.logError("Failed to load list config file ("+loadFrom+")",e);
             return null;
         }
         return result;
@@ -171,7 +167,6 @@ public class ConfigHelper {
         try {
             Files.write(loadFrom.toPath(), result.toString().getBytes());
         } catch (IOException e) {
-            Debug.logError("Failed to write list config to ("+loadFrom+")",e);
         }
     }
 }

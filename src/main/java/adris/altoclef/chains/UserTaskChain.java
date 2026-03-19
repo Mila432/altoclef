@@ -1,7 +1,6 @@
 package adris.altoclef.chains;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.TaskFinishedEvent;
 import adris.altoclef.tasksystem.Task;
@@ -82,15 +81,13 @@ public class UserTaskChain extends SingleTaskChain {
         currentOnFinish = onFinish;
 
         if (!runningIdleTask) {
-            Debug.logMessage("User Task Set: " + task.toString());
+        } else {
         }
         mod.getTaskRunner().enable();
         taskStopwatch.begin();
         setTask(task);
 
         if (mod.getModSettings().failedToLoad()) {
-            Debug.logWarning("Settings file failed to load at some point. Check logs for more info, or delete the" +
-                    " file to re-load working settings.");
         }
     }
 
@@ -113,7 +110,6 @@ public class UserTaskChain extends SingleTaskChain {
         boolean actuallyDone = mainTask == null;
         if (actuallyDone) {
             if (!runningIdleTask) {
-                Debug.logMessage("User task FINISHED. Took %s seconds.", prettyPrintTimeDuration(seconds));
                 EventBus.publish(new TaskFinishedEvent(seconds, oldTask));
             }
             if (shouldIdle) {

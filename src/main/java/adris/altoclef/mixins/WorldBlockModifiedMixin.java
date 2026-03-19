@@ -21,14 +21,19 @@ public class WorldBlockModifiedMixin {
     }
 
     @Inject(
-            method = "onBlockChanged",
+            //#if MC >= 12111
+            method = "onBlockStateChanged",
+            //#else
+            //$$ method = "onBlockChanged",
+            //#endif
             at = @At("HEAD")
     )
     public void onBlockWasChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
-        if (!hasBlock(oldBlock, pos) && hasBlock(newBlock, pos)) {
+        boolean oldBlockPresent = hasBlock(oldBlock, pos);
+        boolean newBlockPresent = hasBlock(newBlock, pos);
+        if (!oldBlockPresent && newBlockPresent) {
             BlockPlaceEvent evt = new BlockPlaceEvent(pos, newBlock);
             EventBus.publish(evt);
         }
     }
-
 }

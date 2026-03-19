@@ -150,8 +150,12 @@ public class FoodChain extends SingleTaskChain {
         }
 
         //FIXME should check if currently fighting
-        if (hasFood && (needsToEat() || requestFillup) && cachedPerfectFood.isPresent() &&
-                !mod.getMLGBucketChain().isChorusFruiting() && !mod.getPlayer().isBlocking()/* &&
+        boolean needsToEatResult = needsToEat();
+        boolean present = cachedPerfectFood.isPresent();
+        boolean isChorusFruiting = mod.getMLGBucketChain().isChorusFruiting();
+        boolean isBlocking = mod.getPlayer().isBlocking();
+        if (hasFood && (needsToEatResult || requestFillup) && present &&
+                !isChorusFruiting && !isBlocking/* &&
                 !areEnemiesNearby(mod)*/) {
 
             Item toUse = cachedPerfectFood.get();
@@ -232,7 +236,10 @@ public class FoodChain extends SingleTaskChain {
         //Debug.logMessage("FOOD: " + foodLevel + " -- HEALTH: " + health);
 
         // Eat if we're desperate/need to heal ASAP
-        if (player.isOnFire() || player.hasStatusEffect(StatusEffects.WITHER) || health < config.alwaysEatWhenWitherOrFireAndHealthBelow) {
+        boolean isOnFire = player.isOnFire();
+        boolean hasWither = player.hasStatusEffect(StatusEffects.WITHER);
+        boolean alwaysEatCondition = health < config.alwaysEatWhenWitherOrFireAndHealthBelow;
+        if (isOnFire || hasWither || alwaysEatCondition) {
             return true;
         } else if (foodLevel > config.alwaysEatWhenBelowHunger) {
             if (health < config.alwaysEatWhenBelowHealth) {
@@ -250,7 +257,8 @@ public class FoodChain extends SingleTaskChain {
             Item best = cachedPerfectFood.get();
 
             int fills = (ItemVer.getFoodComponent(best) != null) ? ItemVer.getFoodComponent(best).getHunger() : -1;
-            return fills == need;
+            boolean perfectFit = fills == need;
+            return perfectFit;
         }
 
         return false;

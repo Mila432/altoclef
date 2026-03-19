@@ -14,6 +14,9 @@ public class ChatMessageEvent {
         this.message = message;
         this.senderName = senderName;
         this.messageType = messageType;
+        
+        if (message == null || senderName == null || messageType == null) {
+        }
     }
     public String messageContent() {
         return message;

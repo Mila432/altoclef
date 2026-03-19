@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasks.CraftInInventoryTask;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasksystem.Task;
@@ -55,7 +54,9 @@ public class CollectPlanksTask extends ResourceTask {
     @Override
     protected double getPickupRange(AltoClef mod) {
         ItemStorageTracker storage = mod.getItemStorage();
-        if (storage.getItemCount(ItemHelper.LOG)*4>_targetCount) return 10;
+        int logCount = storage.getItemCount(ItemHelper.LOG);
+        boolean haveEnoughLogs = logCount * 4 > _targetCount;
+        if (haveEnoughLogs) return 10;
 
         return 50;
     }
@@ -67,7 +68,8 @@ public class CollectPlanksTask extends ResourceTask {
 
     @Override
     protected void onResourceStart(AltoClef mod) {
-
+        if (_logsInNether) {
+        }
     }
 
     @Override
@@ -75,14 +77,14 @@ public class CollectPlanksTask extends ResourceTask {
 
         // Craft when we can
         int totalInventoryPlankCount = mod.getItemStorage().getItemCount(_planks);
-        int potentialPlanks = totalInventoryPlankCount + mod.getItemStorage().getItemCount(_logs) * 4;
+        int totalInventoryLogCount = mod.getItemStorage().getItemCount(_logs);
+        int potentialPlanks = totalInventoryPlankCount + totalInventoryLogCount * 4;
         if (potentialPlanks >= _targetCount) {
             for (Item logCheck : _logs) {
                 int count = mod.getItemStorage().getItemCount(logCheck);
                 if (count > 0) {
                     Item plankCheck = ItemHelper.logToPlanks(logCheck);
                     if (plankCheck == null) {
-                        Debug.logError("Invalid/Un-convertable log: " + logCheck + " (failed to find corresponding plank)");
                     }
                     int plankCount = mod.getItemStorage().getItemCount(plankCheck);
                     int otherPlankCount = totalInventoryPlankCount - plankCount;
@@ -97,7 +99,8 @@ public class CollectPlanksTask extends ResourceTask {
         ArrayList<ItemTarget> blocksTomine = new ArrayList<>(2);
         blocksTomine.add(new ItemTarget(_logs));
         // Ignore planks if we're told to.
-        if (!mod.getBehaviour().exclusivelyMineLogs()) {
+        boolean exclusivelyMineLogs = mod.getBehaviour().exclusivelyMineLogs();
+        if (!exclusivelyMineLogs) {
             // TODO: Add planks back in, but with a heuristic check (so we don't go for abandoned mineshafts)
             //blocksTomine.add(new ItemTarget(ItemUtil.PLANKS));
         }

@@ -29,7 +29,9 @@ public class StringArg extends Arg<String> {
     protected StringParser<String> getParser() {
         return reader -> {
             String value = reader.next();
-            if (value.isEmpty()) throw new CommandNotFinishedException("String cannot be empty");
+            if (value.isEmpty()) {
+                throw new CommandNotFinishedException("String cannot be empty");
+            }
 
             return value;
         };

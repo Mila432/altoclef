@@ -1,6 +1,5 @@
 package adris.altoclef.util.helpers;
 
-import adris.altoclef.Debug;
 import adris.altoclef.util.baritone.CachedProjectile;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
@@ -26,7 +25,11 @@ public class ProjectileHelper {
         double deltaX = playerX - shootX,
                 deltaZ = playerZ - shootZ;
         // Did da math I am smurt boi who knows basic calculus
-        double t = ((velX * deltaX) + (velZ * deltaZ)) / (velX * velX + velZ * velZ);
+        double denominator = velX * velX + velZ * velZ;
+        if (denominator == 0) {
+            return new Vec3d(shootX, 0, shootZ);
+        }
+        double t = ((velX * deltaX) + (velZ * deltaZ)) / denominator;
 
         double hitX = shootX + velX * t,
                 hitZ = shootZ + velZ * t;
@@ -39,6 +42,9 @@ public class ProjectileHelper {
     }
 
     private static double getArrowHitHeight(double gravity, double horizontalVel, double verticalVel, double initialHeight, double distanceTraveled) {
+        if (horizontalVel == 0) {
+            return initialHeight;
+        }
         double time = distanceTraveled / horizontalVel;
         return initialHeight - (verticalVel * time) - 0.5 * (gravity * time * time);
     }
@@ -66,7 +72,13 @@ public class ProjectileHelper {
     }
 
     public static Vec3d calculateArrowClosestApproach(CachedProjectile projectile, ClientPlayerEntity player) {
-        return calculateArrowClosestApproach(projectile, player.getPos());
+        return calculateArrowClosestApproach(projectile,
+            //#if MC >= 12111
+            player.getEntityPos()
+            //#else
+            //$$ player.getPos()
+            //#endif
+        );
     }
 
     public static double[] calculateAnglesForSimpleProjectileMotion(double launchHeight, double launchTargetDistance, double launchVelocity, double gravity) {
@@ -78,7 +90,6 @@ public class ProjectileHelper {
         double root = v * v * v * v - g * (g * x * x + 2 * y * v * v);
         if (root < 0) {
             // Imaginary root means not enough power, return 45 as the best/furthest angle.
-            Debug.logMessage("Not enough velocity, returning 45 degrees.");
             return new double[]{45, 45};
         }
 
@@ -92,7 +103,13 @@ public class ProjectileHelper {
 
     public static Vec3d getThrowOrigin(Entity entity) {
         // Minecraft Magic Number
-        return entity.getPos().subtract(0, 0.1, 0);
+        return 
+            //#if MC >= 12111
+            entity.getEntityPos()
+            //#else
+            //$$ entity.getPos()
+            //#endif
+            .subtract(0, 0.1, 0);
     }
 
     // Unable to figure out how to extract multiple roots, this is too complicated for engineering major like me.
@@ -106,6 +123,9 @@ public class ProjectileHelper {
 
         // Cubic terms
         double a = (g * g) / 2.0;
+        if (a == 0) {
+            return -1;
+        }
         double b = -(3.0 * g * V.y) / 2.0;
         double c = V.lengthSquared() + (g * V.y);
         double d = -1 * V.dotProduct(D);
@@ -123,7 +143,9 @@ public class ProjectileHelper {
 
         // Theoretically there could exist imaginary roots that will cancel themselves out, but that ought to be rare.
         // We will get an imaginary root somewhere so ignore it.
-        if (rootInner < 0) return -1;
+        if (rootInner < 0) {
+            return -1;
+        }
 
         rootInner = Math.sqrt(rootInner);
 
@@ -132,7 +154,12 @@ public class ProjectileHelper {
         double outerPreCubeRight = q - rootInner;
 
         // THERE SHOULD BE UP TO 3!!! This will only find one and that can be completely wrong.
-        return Math.pow(outerPreCubeLeft, 1.0 / 3.0) + Math.pow(outerPreCubeRight, 1.0 / 3.0) + p;
+        double result = Math.pow(outerPreCubeLeft, 1.0 / 3.0) + Math.pow(outerPreCubeRight, 1.0 / 3.0) + p;
+        
+        if (Double.isNaN(result) || Double.isInfinite(result)) {
+        }
+        
+        return result;
     }
 
 }

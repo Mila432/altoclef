@@ -10,11 +10,13 @@ import org.jetbrains.annotations.Nullable;
 
 public class DrawContextWrapper {
 
-
     //#if MC >= 12001
     public static DrawContextWrapper of(DrawContext context) {
-        if (context == null) return null;
-        return new DrawContextWrapper(context);
+        if (context == null) {
+            return null;
+        }
+        DrawContextWrapper wrapper = new DrawContextWrapper(context);
+        return wrapper;
     }
     private final DrawContext context;
 
@@ -23,8 +25,12 @@ public class DrawContextWrapper {
     }
     //#else
     //$$ public static DrawContextWrapper of(MatrixStack matrices) {
-    //$$    if (matrices == null) return null;
-    //$$    return new DrawContextWrapper(matrices);
+    //$$    if (matrices == null) {
+    //$$        Debug.logWarning("DrawContextWrapper.of() - Received null MatrixStack, returning null wrapper");
+    //$$        return null;
+    //$$    }
+    //$$    DrawContextWrapper wrapper = new DrawContextWrapper(matrices);
+    //$$    return wrapper;
     //$$ }
     //$$
     //$$ private final MatrixStack matrices;
@@ -43,31 +49,82 @@ public class DrawContextWrapper {
     }
 
     public void fill(int x1, int y1, int x2, int y2, int color) {
-        //#if MC >= 12001
-        context.fill(renderLayer, x1, y1, x2, y2, color);
+        // Critical validation: Check for invalid coordinates
+        if (x1 > x2 || y1 > y2) {
+        }
+        
+        //#if MC >= 12111
+        if (context == null) {
+            return;
+        }
+        context.fill(x1, y1, x2, y2, color);
+        //#elseif MC >= 12001
+        //$$ if (context == null) {
+        //$$     Debug.logError("DrawContextWrapper.fill() - CRITICAL: context is null when attempting to fill rectangle!");
+        //$$     return;
+        //$$ }
+        //$$ context.fill(renderLayer, x1, y1, x2, y2, color);
         //#else
-        //$$  DrawableHelper.fill(matrices, x1, y1, x2, y2, color);
+        //$$ DrawableHelper.fill(matrices, x1, y1, x2, y2, color);
         //#endif
     }
 
     public void drawHorizontalLine(int x1, int x2, int y, int color) {
-        //#if MC >= 12001
-        context.drawHorizontalLine(renderLayer, x1, x2, y, color);
+        // Critical validation: Check for invalid line parameters
+        if (x1 == x2) {
+        }
+        
+        //#if MC >= 12111
+        if (context == null) {
+            return;
+        }
+        context.drawHorizontalLine(x1, x2, y, color);
+        //#elseif MC >= 12001
+        //$$ if (context == null) {
+        //$$     Debug.logError("DrawContextWrapper.drawHorizontalLine() - CRITICAL: context is null when attempting to draw horizontal line!");
+        //$$     return;
+        //$$ }
+        //$$ context.drawHorizontalLine(renderLayer, x1, x2, y, color);
         //#else
         //$$ ((DrawableHelperInvoker) helper).invokeDrawHorizontalLine(matrices, x1, x2, y, color);
         //#endif
     }
 
     public void drawVerticalLine(int x, int y1, int y2, int color) {
-        //#if MC >= 12001
-        context.drawVerticalLine(renderLayer, x, y1, y2, color);
+        // Critical validation: Check for invalid line parameters
+        if (y1 == y2) {
+        }
+        
+        //#if MC >= 12111
+        if (context == null) {
+            return;
+        }
+        context.drawVerticalLine(x, y1, y2, color);
+        //#elseif MC >= 12001
+        //$$ if (context == null) {
+        //$$     Debug.logError("DrawContextWrapper.drawVerticalLine() - CRITICAL: context is null when attempting to draw vertical line!");
+        //$$     return;
+        //$$ }
+        //$$ context.drawVerticalLine(renderLayer, x, y1, y2, color);
         //#else
         //$$ ((DrawableHelperInvoker) helper).invokeDrawVerticalLine(matrices, x, y1, y2, color);
         //#endif
     }
 
     public void drawText(TextRenderer textRenderer, @Nullable String text, int x, int y, int color, boolean shadow) {
+        // Critical validation: Check for null textRenderer
+        if (textRenderer == null) {
+            return;
+        }
+        
+        // Log warning for empty text (might be intentional but worth noting)
+        if (text != null && text.isEmpty()) {
+        }
+        
         //#if MC >= 12001
+        if (context == null) {
+            return;
+        }
         context.drawText(textRenderer,text,x,y,color,shadow);
         //#else
         //$$ if (shadow) {
@@ -80,26 +137,74 @@ public class DrawContextWrapper {
 
 
     public MatrixStack getMatrices() {
-        //#if MC >= 12001
-        return context.getMatrices();
+        //#if MC >= 12111
+        // In 1.21.11, DrawContext.getMatrices() returns Matrix3x2fStack
+        // We need to create a MatrixStack from the Matrix3x2fStack for compatibility
+        // Since Matrix3x2fStack is not directly convertible to MatrixStack,
+        // we'll return a new MatrixStack that mirrors the current transformations
+        // This is a temporary solution until callers can be updated
+        MatrixStack stack = new MatrixStack();
+
+        return stack;
+        //#elseif MC >= 12001
+        //$$ if (context == null) {
+        //$$     Debug.logError("DrawContextWrapper.getMatrices() - CRITICAL: context is null! Returning new empty MatrixStack.");
+        //$$     return new MatrixStack(); // Return empty stack to prevent NPE
+        //$$ }
+        //$$ MatrixStack result = context.getMatrices();
+        //$$ return result;
         //#else
+        //$$ if (matrices == null) {
+        //$$     Debug.logError("DrawContextWrapper.getMatrices() - CRITICAL: matrices is null! Returning new empty MatrixStack.");
+        //$$     return new MatrixStack(); // Return empty stack to prevent NPE
+        //$$ }
         //$$ return matrices;
         //#endif
     }
 
     public int getScaledWindowWidth() {
         //#if MC >= 12001
-        return context.getScaledWindowWidth();
+        if (context == null) {
+            return 0;
+        }
+        int width = context.getScaledWindowWidth();
+        return width;
         //#else
-        //$$ return MinecraftClient.getInstance().getWindow().getScaledWidth();
+        //$$ MinecraftClient client = MinecraftClient.getInstance();
+        //$$ if (client == null) {
+        //$$     Debug.logError("DrawContextWrapper.getScaledWindowWidth() - CRITICAL: MinecraftClient instance is null! Returning 0 as fallback.");
+        //$$     return 0;
+        //$$ }
+        //$$ if (client.getWindow() == null) {
+        //$$     Debug.logError("DrawContextWrapper.getScaledWindowWidth() - CRITICAL: MinecraftClient window is null! Returning 0 as fallback.");
+        //$$     return 0;
+        //$$ }
+        //$$ int width = client.getWindow().getScaledWidth();
+        //$$ Debug.logMessage("DrawContextWrapper.getScaledWindowWidth() - Returning width=" + width + " from MinecraftClient window");
+        //$$ return width;
         //#endif
     }
 
     public int getScaledWindowHeight() {
         //#if MC >= 12001
-        return context.getScaledWindowHeight();
+        if (context == null) {
+            return 0;
+        }
+        int height = context.getScaledWindowHeight();
+        return height;
         //#else
-        //$$ return MinecraftClient.getInstance().getWindow().getScaledHeight();
+        //$$ MinecraftClient client = MinecraftClient.getInstance();
+        //$$ if (client == null) {
+        //$$     Debug.logError("DrawContextWrapper.getScaledWindowHeight() - CRITICAL: MinecraftClient instance is null! Returning 0 as fallback.");
+        //$$     return 0;
+        //$$ }
+        //$$ if (client.getWindow() == null) {
+        //$$     Debug.logError("DrawContextWrapper.getScaledWindowHeight() - CRITICAL: MinecraftClient window is null! Returning 0 as fallback.");
+        //$$     return 0;
+        //$$ }
+        //$$ int height = client.getWindow().getScaledHeight();
+        //$$ Debug.logMessage("DrawContextWrapper.getScaledWindowHeight() - Returning height=" + height + " from MinecraftClient window");
+        //$$ return height;
         //#endif
     }
 

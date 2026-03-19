@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.beatgame.prioritytask.prioritycalculators;
 
+
 public abstract class ItemPriorityCalculator {
 
     public final int minCount;
@@ -15,9 +16,13 @@ public abstract class ItemPriorityCalculator {
 
     public final double getPriority(int count) {
         if (count > minCount) {
+            if (!minCountSatisfied) {
+            }
             minCountSatisfied = true;
         }
         if (count > maxCount) {
+            if (!maxCountSatisfied) {
+            }
             maxCountSatisfied = true;
         }
 

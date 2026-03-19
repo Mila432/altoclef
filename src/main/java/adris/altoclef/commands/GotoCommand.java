@@ -29,6 +29,9 @@ public class GotoCommand extends Command {
     }
 
     public static Task getMovementTaskFor(GotoTarget target) {
+        if (target == null) {
+            return null;
+        }
         return switch (target.getType()) {
             case XYZ -> new GetToBlockTask(new BlockPos(target.getX(), target.getY(), target.getZ()), target.getDimension());
             case XZ -> new GetToXZTask(target.getX(), target.getZ(), target.getDimension());
@@ -40,6 +43,10 @@ public class GotoCommand extends Command {
     @Override
     protected void call(AltoClef mod, ArgParser parser) throws CommandException {
         GotoTarget target = parser.get(GotoTarget.class);
-        mod.runUserTask(getMovementTaskFor(target), this::finish);
+        Task movementTask = getMovementTaskFor(target);
+        if (movementTask == null) {
+            return;
+        }
+        mod.runUserTask(movementTask, this::finish);
     }
 }

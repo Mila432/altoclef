@@ -30,7 +30,8 @@ public class KillEntityTask extends AbstractKillEntityTask {
     @Override
     protected boolean isSubEqual(AbstractDoToEntityTask other) {
         if (other instanceof KillEntityTask task) {
-            return Objects.equals(task.target, target);
+            boolean targetsEqual = Objects.equals(task.target, target);
+            return targetsEqual;
         }
         return false;
     }

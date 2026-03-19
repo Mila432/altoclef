@@ -13,6 +13,9 @@ public class EntityVer {
 
     @Pattern
     public boolean isInNetherPortal(Entity entity) {
+        if (entity == null) {
+            return false;
+        }
         //#if MC <= 12006
         //$$ return ((EntityAccessor)entity).isInNetherPortal();
         //#else
@@ -22,6 +25,9 @@ public class EntityVer {
 
     @Pattern
     public int getPortalCooldown(Entity entity) {
+        if (entity == null) {
+            return 0;
+        }
         //#if MC >= 12001
         return entity.getPortalCooldown();
         //#else
@@ -32,6 +38,9 @@ public class EntityVer {
 
     @Pattern
     public BlockPos getLandingPos(Entity entity) {
+        if (entity == null) {
+            return BlockPos.ORIGIN;
+        }
         //#if MC >= 11701
         return entity.getSteppingPos();
         //#else
@@ -41,6 +50,9 @@ public class EntityVer {
 
     @Pattern
     private static float getPitch(Entity player) {
+        if (player == null) {
+            return 0.0f;
+        }
         //#if MC >= 11701
         return player.getPitch();
         //#else
@@ -50,6 +62,9 @@ public class EntityVer {
 
     @Pattern
     private static float getYaw(Entity player) {
+        if (player == null) {
+            return 0.0f;
+        }
         //#if MC >= 11701
         return player.getYaw();
         //#else
@@ -59,6 +74,9 @@ public class EntityVer {
 
     @Pattern
     private static void setPitch(Entity player, float value) {
+        if (player == null) {
+            return;
+        }
         //#if MC >= 11701
         player.setPitch(value);
         //#else
@@ -68,6 +86,9 @@ public class EntityVer {
 
     @Pattern
     private static void setYaw(Entity player, float value) {
+        if (player == null) {
+            return;
+        }
         //#if MC >= 11701
         player.setYaw(value);
         //#else
@@ -77,6 +98,9 @@ public class EntityVer {
 
     @Pattern
     private static Vec3d getEyePos(Entity entity) {
+        if (entity == null) {
+            return Vec3d.ZERO;
+        }
         //#if MC >= 11701
         return entity.getEyePos();
         //#else
@@ -86,6 +110,9 @@ public class EntityVer {
 
     @Pattern
     private static ChunkPos getChunkPos(Entity entity) {
+        if (entity == null) {
+            return new ChunkPos(0, 0);
+        }
         //#if MC >= 11701
         return entity.getChunkPos();
         //#else
@@ -95,6 +122,9 @@ public class EntityVer {
 
     @Pattern
     private static int getBlockX(Entity entity) {
+        if (entity == null) {
+            return 0;
+        }
         //#if MC >= 11701
         return entity.getBlockX();
         //#else
@@ -104,6 +134,9 @@ public class EntityVer {
 
     @Pattern
     private static int getBlockY(Entity entity) {
+        if (entity == null) {
+            return 0;
+        }
         //#if MC >= 11701
         return entity.getBlockY();
         //#else
@@ -113,6 +146,9 @@ public class EntityVer {
 
     @Pattern
     private static int getBlockZ(Entity entity) {
+        if (entity == null) {
+            return 0;
+        }
         //#if MC >= 11701
         return entity.getBlockZ();
         //#else

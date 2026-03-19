@@ -26,6 +26,8 @@ public class LocateStructureCommand extends Command {
             case DESERT_TEMPLE:
                 mod.runUserTask(new LocateDesertTempleTask(), this::finish);
                 break;
+            default:
+                break;
         }
     }
 

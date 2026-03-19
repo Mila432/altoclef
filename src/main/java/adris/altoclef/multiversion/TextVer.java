@@ -17,6 +17,9 @@ public class TextVer {
 
     @Pattern
     public static MutableText literal(String str) {
+        if (str == null) {
+            return empty();
+        }
         //#if MC >= 11900
         return Text.literal(str);
         //#else

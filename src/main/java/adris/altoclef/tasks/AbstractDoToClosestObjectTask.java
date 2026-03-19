@@ -77,7 +77,11 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
                 if (goalTask != null /*isMovingToClosestPos(mod)*/) {
                     setDebugState("Moving towards closest...");
                     double currentHeuristic = getCurrentCalculatedHeuristic(mod);
-                    double closestDistanceSqr = getPos(mod, currentlyPursuing).squaredDistanceTo(mod.getPlayer().getPos());
+                    //#if MC >= 12111
+                    double closestDistanceSqr = getPos(mod, currentlyPursuing).squaredDistanceTo(mod.getPlayer().getEntityPos());
+                    //#else
+                    //$$ double closestDistanceSqr = getPos(mod, currentlyPursuing).squaredDistanceTo(mod.getPlayer().getPos());
+                    //#endif
                     int lastTick = WorldHelper.getTicks();
 
                     if (!heuristicMap.containsKey(currentlyPursuing)) {
@@ -90,7 +94,11 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
                     if (heuristicMap.containsKey(newClosest)) {
                         // Our new object has a past potential heuristic calculated, if it's better try it out.
                         CachedHeuristic maybeReAttempt = heuristicMap.get(newClosest);
-                        double maybeClosestDistance = getPos(mod, newClosest).squaredDistanceTo(mod.getPlayer().getPos());
+                        //#if MC >= 12111
+                        double maybeClosestDistance = getPos(mod, newClosest).squaredDistanceTo(mod.getPlayer().getEntityPos());
+                        //#else
+                        //$$ double maybeClosestDistance = getPos(mod, newClosest).squaredDistanceTo(mod.getPlayer().getPos());
+                        //#endif
                         // Get considerably closer (divide distance by 2)
                         if (maybeReAttempt.getHeuristicValue() < h.getHeuristicValue() || maybeClosestDistance < maybeReAttempt.getClosestDistanceSqr() / 4) {
                             setDebugState("Retrying old heuristic!");
@@ -114,6 +122,8 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
 
         if (currentlyPursuing != null) {
             goalTask = getGoalTask(currentlyPursuing);
+            if (goalTask == null) {
+            }
             return goalTask;
         } else {
             goalTask = null;

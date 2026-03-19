@@ -47,6 +47,8 @@ public class StashCommand extends Command {
         if (itemList == null) {
             items = DepositCommand.getAllNonEquippedOrToolItemsAsTarget(mod);
         } else {
+            if (itemList.isEmpty()) {
+            }
             items = itemList.toArray(new ItemTarget[0]);
         }
 

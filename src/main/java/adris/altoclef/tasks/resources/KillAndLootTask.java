@@ -35,13 +35,15 @@ public class KillAndLootTask extends ResourceTask {
 
     @Override
     protected void onResourceStart(AltoClef mod) {
-
     }
 
     @Override
     protected Task onResourceTick(AltoClef mod) {
-        if (!mod.getEntityTracker().entityFound(_toKill)) {
-            if (isInWrongDimension(mod)) {
+        boolean entityFound = mod.getEntityTracker().entityFound(_toKill);
+        boolean wrongDimension = isInWrongDimension(mod);
+        
+        if (!entityFound) {
+            if (wrongDimension) {
                 setDebugState("Going to correct dimension.");
                 return getToCorrectDimensionTask(mod);
             }
@@ -54,7 +56,8 @@ public class KillAndLootTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(AltoClef mod, Task interruptTask) {
-
+        if (interruptTask != null) {
+        }
     }
 
     @Override

@@ -1,7 +1,6 @@
 package adris.altoclef.commandsystem;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.commandsystem.args.Arg;
 import adris.altoclef.commandsystem.args.GoToTargetArg;
 import adris.altoclef.commandsystem.args.ListArg;
@@ -41,9 +40,10 @@ public abstract class Command {
     }
 
     protected void finish() {
-        if (onFinish != null)
+        if (onFinish != null) {
             //noinspection unchecked
             onFinish.run();
+        }
     }
 
     public String getHelpRepresentation(String usedName)  throws RuntimeCommandException{
@@ -76,11 +76,9 @@ public abstract class Command {
     }
 
     protected void log(Object message) {
-        Debug.logMessage(message.toString());
     }
 
     protected void logError(Object message) {
-        Debug.logError(message.toString());
     }
 
     protected abstract void call(AltoClef mod, ArgParser parser) throws CommandException;

@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.slot;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StlHelper;
@@ -68,7 +67,6 @@ public class MoveItemToSlotTask extends Task {
                     }
                 }
                 if (toPlace.isEmpty()) {
-                    Debug.logWarning("Called MoveItemToSlotTask when item/not enough item is available! valid items: " + StlHelper.toString(validItems, Item::getTranslationKey));
                     this.stop();
                     return null;
                 }

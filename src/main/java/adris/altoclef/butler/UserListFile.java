@@ -25,6 +25,8 @@ public class UserListFile implements IListConfigFile {
 
     @Override
     public void addLine(String line) {
+        if (line == null || line.isEmpty()) {
+        }
         _users.add(line);
     }
 }

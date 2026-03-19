@@ -6,9 +6,17 @@ import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
+//#if MC < 12111
+//$$ import net.minecraft.item.SwordItem;
+//#else
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.AttributeModifiersComponent;
+//#endif
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.registry.tag.ItemTags;
 
 import java.util.List;
 
@@ -33,23 +41,44 @@ public abstract class AbstractKillEntityTask extends AbstractDoToEntityTask {
         super(maintainDistance, combatGuardLowerRange, combatGuardLowerFieldRadius);
     }
 
+    private static float getAttackDamage(ItemStack stack) {
+        //#if MC >= 12111
+        AttributeModifiersComponent modifiers = stack.getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT);
+        return (float) modifiers.applyOperations(EntityAttributes.ATTACK_DAMAGE, 0.0, EquipmentSlot.MAINHAND);
+        //#else
+        //$$ // This method is not used for MC < 12111, so return 0 (should never be called)
+        //$$ return 0;
+        //#endif
+    }
+
     public static Item bestWeapon(AltoClef mod) {
         List<ItemStack> invStacks = mod.getItemStorage().getItemStacksPlayerInventory(true);
 
         Item bestItem = StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem();
         float bestDamage = Float.NEGATIVE_INFINITY;
 
-        if (bestItem instanceof SwordItem handToolItem) {
-            bestDamage = handToolItem.getMaterial().getAttackDamage();
+        ItemStack bestItemStack = StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot());
+        //#if MC < 12111
+        //$$ if (bestItem instanceof SwordItem handToolItem) {
+        //$$     bestDamage = handToolItem.getMaterial().getAttackDamage();
+        //$$ }
+        //#else
+        if (bestItemStack.isIn(ItemTags.SWORDS)) {
+            bestDamage = getAttackDamage(bestItemStack);
         }
+        //#endif
 
         for (ItemStack invStack : invStacks) {
-            if (!(invStack.getItem() instanceof SwordItem item)) continue;
-
-            float itemDamage = item.getMaterial().getAttackDamage();
+            //#if MC < 12111
+            //$$ if (!(invStack.getItem() instanceof SwordItem item)) continue;
+            //$$ float itemDamage = item.getMaterial().getAttackDamage();
+            //#else
+            if (!invStack.isIn(ItemTags.SWORDS)) continue;
+            float itemDamage = getAttackDamage(invStack);
+            //#endif
 
             if (itemDamage > bestDamage) {
-                bestItem = item;
+                bestItem = invStack.getItem();
                 bestDamage = itemDamage;
             }
         }
@@ -72,7 +101,10 @@ public abstract class AbstractKillEntityTask extends AbstractDoToEntityTask {
         // Equip weapon
         if (!equipWeapon(mod)) {
             float hitProg = mod.getPlayer().getAttackCooldownProgress(0);
-            if (hitProg >= 1 && (mod.getPlayer().isOnGround() || mod.getPlayer().getVelocity().getY() < 0 || mod.getPlayer().isTouchingWater())) {
+            boolean onGround = mod.getPlayer().isOnGround();
+            boolean falling = mod.getPlayer().getVelocity().getY() < 0;
+            boolean inWater = mod.getPlayer().isTouchingWater();
+            if (hitProg >= 1 && (onGround || falling || inWater)) {
                 LookHelper.lookAt(mod, entity.getEyePos());
                 mod.getControllerExtras().attack(entity);
             }

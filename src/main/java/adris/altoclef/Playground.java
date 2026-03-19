@@ -115,12 +115,10 @@ public class Playground {
 
     public static void TEMP_TEST_FUNCTION(AltoClef mod, String arg) {
         //mod.runUserTask();
-        Debug.logMessage("Running test...");
 
         switch (arg) {
             case "":
                 // None specified
-                Debug.logWarning("Please specify a test (ex. stacked, bed, terminate)");
                 break;
             case "pickup":
                 mod.runUserTask(new PickupDroppedItemTask(new ItemTarget(Items.RAW_IRON, 3), true));
@@ -128,7 +126,6 @@ public class Playground {
             case "chunk": {
                 // We may have missed a chunk that's far away...
                 BlockPos p = new BlockPos(100000, 3, 100000);
-                Debug.logMessage("LOADED? " + (!(mod.getWorld().getChunk(p) instanceof EmptyChunk)));
                 break;
             }
             case "structure":
@@ -183,16 +180,16 @@ public class Playground {
                 mod.getBehaviour().avoidBlockBreaking((BlockPos b) -> (-1000 < b.getX() && b.getX() < 1000)
                         && (-1000 < b.getY() && b.getY() < 1000)
                         && (-1000 < b.getZ() && b.getZ() < 1000));
-                Debug.logMessage("Testing avoid from -1000, -1000, -1000 to 1000, 1000, 1000");
                 break;
             case "portal":
                 //mod.runUserTask(new EnterNetherPortalTask(new ConstructNetherPortalBucketTask(), Dimension.NETHER));
-                mod.runUserTask(new EnterNetherPortalTask(new ConstructNetherPortalObsidianTask(), WorldHelper.getCurrentDimension() == Dimension.OVERWORLD ? Dimension.NETHER : Dimension.OVERWORLD));
+                Dimension currentDim = WorldHelper.getCurrentDimension();
+                Dimension targetDim = currentDim == Dimension.OVERWORLD ? Dimension.NETHER : Dimension.OVERWORLD;
+                mod.runUserTask(new EnterNetherPortalTask(new ConstructNetherPortalObsidianTask(), targetDim));
                 break;
             case "kill":
                 List<ZombieEntity> zombs = mod.getEntityTracker().getTrackedEntities(ZombieEntity.class);
                 if (zombs.size() == 0) {
-                    Debug.logWarning("No zombs found.");
                 } else {
                     LivingEntity entity = zombs.get(0);
                     mod.runUserTask(new KillEntityTask(entity));
@@ -202,7 +199,6 @@ public class Playground {
                 // Test de-equip
                 new Thread(() -> {
                     for (int i = 3; i > 0; --i) {
-                        Debug.logMessage(i + "...");
                         sleepSec(1);
                     }
 
@@ -219,15 +215,12 @@ public class Playground {
 
                     // Already equipped
                     if (t.getItemStackInSlot(target).getItem() == toEquip) {
-                        Debug.logMessage("Already equipped.");
                     } else {
                         List<Integer> itemSlots = t.getInventorySlotsWithItem(toEquip);
                         if (itemSlots.size() != 0) {
                             int slot = itemSlots.get(0);
                             t.swapItems(Slot.getFromInventory(slot), target);
-                            Debug.logMessage("Equipped via swap");
                         } else {
-                            Debug.logWarning("Failed to equip item " + toEquip.getTranslationKey());
                         }
                     }
                      */
@@ -263,9 +256,7 @@ public class Playground {
                     }
                     fw.flush();
                     fw.close();
-                    Debug.logMessage(unobtainable + " / " + total + " unobtainable items. Wrote a list of items to \"" + f.getAbsolutePath() + "\".");
                 } catch (IOException e) {
-                    Debug.logWarning(e.toString());
                 }
                 break;
             case "piglin":
@@ -281,7 +272,8 @@ public class Playground {
                 mod.runUserTask(new KillEnderDragonWithBedsTask());
                 break;
             case "dragon-pearl":
-                mod.runUserTask(new ThrowEnderPearlSimpleProjectileTask(new BlockPos(0, 60, 0)));
+                BlockPos pearlTarget = new BlockPos(0, 60, 0);
+                mod.runUserTask(new ThrowEnderPearlSimpleProjectileTask(pearlTarget));
                 break;
             case "dragon-old":
                 mod.runUserTask(new KillEnderDragonTask());
@@ -306,7 +298,6 @@ public class Playground {
                 List<GhastEntity> ghasts = mod.getEntityTracker().getTrackedEntities(GhastEntity.class);
 
                 if (ghasts.size() == 0) {
-                    Debug.logWarning("No ghasts found.");
                     break;
                 }
 

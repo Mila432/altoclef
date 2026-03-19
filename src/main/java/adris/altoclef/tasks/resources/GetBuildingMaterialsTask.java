@@ -22,6 +22,9 @@ public class GetBuildingMaterialsTask extends Task {
     @Override
     protected Task onTick() {
         Item[] throwaways = AltoClef.getInstance().getModSettings().getThrowawayItems(true);
+        if (throwaways.length == 0) {
+        } else {
+        }
         return new MineAndCollectTask(new ItemTarget[]{new ItemTarget(throwaways, _count)}, MiningRequirement.WOOD);
     }
 
@@ -40,7 +43,11 @@ public class GetBuildingMaterialsTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return StorageHelper.getBuildingMaterialCount() >= _count;
+        int currentCount = StorageHelper.getBuildingMaterialCount();
+        boolean finished = currentCount >= _count;
+        if (!finished) {
+        }
+        return finished;
     }
 
     @Override

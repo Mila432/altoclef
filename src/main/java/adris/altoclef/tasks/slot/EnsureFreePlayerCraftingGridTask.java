@@ -11,7 +11,6 @@ import net.minecraft.screen.slot.SlotActionType;
 public class EnsureFreePlayerCraftingGridTask extends Task {
     @Override
     protected void onStart() {
-
     }
 
     @Override
@@ -33,7 +32,6 @@ public class EnsureFreePlayerCraftingGridTask extends Task {
 
     @Override
     protected void onStop(Task interruptTask) {
-
     }
 
     @Override

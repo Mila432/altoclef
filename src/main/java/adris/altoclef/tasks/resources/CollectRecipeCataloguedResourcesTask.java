@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.CraftingRecipe;
@@ -22,6 +21,9 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
     private boolean _finished = false;
 
     public CollectRecipeCataloguedResourcesTask(boolean ignoreUncataloguedSlots, RecipeTarget... targets) {
+        if (targets == null) {
+            targets = new RecipeTarget[0];
+        }
         _targets = targets;
         _ignoreUncataloguedSlots = ignoreUncataloguedSlots;
     }
@@ -51,25 +53,32 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
 
             if (weNeed > 0) {
                 CraftingRecipe recipe = target.getRecipe();
+                if (recipe == null) {
+                    continue;
+                }
                 // Default, just go through the recipe slots and collect the first one.
                 for (int i = 0; i < recipe.getSlotCount(); ++i) {
                     ItemTarget slot = recipe.getSlot(i);
                     if (slot == null || slot.isEmpty()) continue;
                     int numberOfRepeats = (int) Math.floor(-0.1 + (double) weNeed / target.getRecipe().outputCount()) + 1;
+                    if (numberOfRepeats <= 0) {
+                    }
                     if (!slot.isCatalogueItem()) {
                         if (slot.getMatches().length != 1) {
                             if (!_ignoreUncataloguedSlots) {
-                                Debug.logWarning("Recipe collection for recipe " + recipe + " slot " + i
-                                        + " is not catalogued. Please define an explicit"
-                                        + " collectRecipeSubTask() function for this item target:" + slot
-                                );
                             }
                         } else {
                             Item item = slot.getMatches()[0];
+                            if (item == null) {
+                                continue;
+                            }
                             itemCount.put(item, itemCount.getOrDefault(item, 0) + numberOfRepeats);
                         }
                     } else {
                         String targetName = slot.getCatalogueName();
+                        if (targetName == null || targetName.isEmpty()) {
+                            continue;
+                        }
                         // How many "repeats" of a recipe we will need.
                         catalogueCount.put(targetName, catalogueCount.getOrDefault(targetName, 0) + numberOfRepeats);
                     }
@@ -86,7 +95,11 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
                 ItemTarget itemTarget = new ItemTarget(catalogueMaterialName, count);
                 if (!StorageHelper.itemTargetsMet(mod, itemTarget)) {
                     setDebugState("Getting " + itemTarget);
-                    return TaskCatalogue.getItemTask(catalogueMaterialName, count);
+                    Task task = TaskCatalogue.getItemTask(catalogueMaterialName, count);
+                    if (task == null) {
+                    } else {
+                    }
+                    return task;
                 }
             }
         }
@@ -95,7 +108,11 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
             if (count > 0) {
                 if (mod.getItemStorage().getItemCount(item) < count) {
                     setDebugState("Getting " + item.getTranslationKey());
-                    return TaskCatalogue.getItemTask(item, count);
+                    Task task = TaskCatalogue.getItemTask(item, count);
+                    if (task == null) {
+                    } else {
+                    }
+                    return task;
                 }
             }
         }
@@ -126,9 +143,9 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
     @Override
     public boolean isFinished() {
         if (_finished) {
-            if (!StorageHelper.hasRecipeMaterialsOrTarget(AltoClef.getInstance(), this._targets)) {
+            boolean hasMaterials = StorageHelper.hasRecipeMaterialsOrTarget(AltoClef.getInstance(), this._targets);
+            if (!hasMaterials) {
                 _finished = false;
-                Debug.logMessage("Invalid collect recipe \"finished\" state, resetting.");
             }
         }
         return _finished;

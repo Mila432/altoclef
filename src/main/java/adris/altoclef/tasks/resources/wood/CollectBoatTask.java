@@ -22,6 +22,8 @@ public class CollectBoatTask extends CraftWithMatchingPlanksTask {
     }
 
     private static CraftingRecipe createRecipe(ItemTarget planks) {
+        if (planks == null) {
+        }
         ItemTarget p = planks;
         ItemTarget o = null;
         return CraftingRecipe.newShapedRecipe(new ItemTarget[]{p, o, p, p, p, p, o, o, o}, 1);

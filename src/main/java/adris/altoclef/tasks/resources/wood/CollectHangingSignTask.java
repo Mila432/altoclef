@@ -31,6 +31,7 @@ public class CollectHangingSignTask extends CraftWithMatchingStrippedLogsTask {
     private static CraftingRecipe createRecipe(ItemTarget strippedLogs) {
         ItemTarget s = strippedLogs;
         ItemTarget chain = TaskCatalogue.getItemTarget("chain", 1);
-        return CraftingRecipe.newShapedRecipe(new ItemTarget[]{chain, null, chain, s, s, s, s, s, s}, 6);
+        CraftingRecipe recipe = CraftingRecipe.newShapedRecipe(new ItemTarget[]{chain, null, chain, s, s, s, s, s, s}, 6);
+        return recipe;
     }
 }

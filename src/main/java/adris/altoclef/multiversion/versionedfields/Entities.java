@@ -13,6 +13,8 @@ public class Entities {
 
     static {
         UNSUPPORTED = VersionedFieldHelper.getUnsupportedEntityClass();
+        if (UNSUPPORTED == null) {
+        }
 
         //#if MC >= 11904
         WARDEN = net.minecraft.entity.mob.WardenEntity.class;

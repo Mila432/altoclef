@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.construction;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.Subscription;
 import adris.altoclef.eventbus.events.BlockPlaceEvent;
@@ -115,6 +114,7 @@ public class PlaceBlockNearbyTask extends Task {
             if (mod.getSlotHandler().forceEquipItem(ItemHelper.blocksToItems(toPlace))) {
                 if (place(mod, current)) {
                     return null;
+                } else {
                 }
             }
         }
@@ -127,7 +127,6 @@ public class PlaceBlockNearbyTask extends Task {
         }
         // Fail check
         if (!progressChecker.check(mod)) {
-            Debug.logMessage("Failed placing, wandering and trying again.");
             LookHelper.randomOrientation();
             if (tryPlace != null) {
                 mod.getBlockScanner().requestBlockUnreachable(tryPlace);
@@ -139,6 +138,8 @@ public class PlaceBlockNearbyTask extends Task {
         // Try to place at a particular spot.
         if (tryPlace == null || !WorldHelper.canReach(tryPlace)) {
             tryPlace = locateClosePlacePos(mod);
+            if (tryPlace == null) {
+            }
         }
         if (tryPlace != null) {
             setDebugState("Trying to place at " + tryPlace);
@@ -177,7 +178,10 @@ public class PlaceBlockNearbyTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return justPlaced != null && ArrayUtils.contains(toPlace, AltoClef.getInstance().getWorld().getBlockState(justPlaced).getBlock());
+        boolean finished = justPlaced != null && ArrayUtils.contains(toPlace, AltoClef.getInstance().getWorld().getBlockState(justPlaced).getBlock());
+        if (finished) {
+        }
+        return finished;
     }
 
     public BlockPos getPlaced() {
@@ -223,17 +227,19 @@ public class PlaceBlockNearbyTask extends Task {
             }
             Hand hand = Hand.MAIN_HAND;
             assert MinecraftClient.getInstance().interactionManager != null;
-            if (MinecraftClient.getInstance().interactionManager.interactBlock(mod.getPlayer(),hand, (BlockHitResult) mouseOver) == ActionResult.SUCCESS &&
-                    mod.getPlayer().isSneaking()) {
+            ActionResult result = MinecraftClient.getInstance().interactionManager.interactBlock(mod.getPlayer(), hand, (BlockHitResult) mouseOver);
+            if (result == ActionResult.SUCCESS && mod.getPlayer().isSneaking()) {
                 mod.getPlayer().swingHand(hand);
                 justPlaced = targetPlace;
-                Debug.logMessage("PRESSED");
                 return true;
+            } else {
             }
 
             //mod.getControllerExtras().mouseClickOverride(1, true);
             //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, true);
             return true;
+        }
+        if (!blockEquipped()) {
         }
         return false;
     }
@@ -267,7 +273,11 @@ public class PlaceBlockNearbyTask extends Task {
                 continue;
             }
             boolean hasBelow = WorldHelper.isSolidBlock(blockPos.down());
-            double distSq = BlockPosVer.getSquaredDistance(blockPos,mod.getPlayer().getPos());
+            //#if MC >= 12111
+            double distSq = BlockPosVer.getSquaredDistance(blockPos, mod.getPlayer().getEntityPos());
+            //#else
+            //$$ double distSq = BlockPosVer.getSquaredDistance(blockPos, mod.getPlayer().getPos());
+            //#endif
 
             double score = distSq + (solid ? 4 : 0) + (hasBelow ? 0 : 10) + (inside ? 3 : 0);
 

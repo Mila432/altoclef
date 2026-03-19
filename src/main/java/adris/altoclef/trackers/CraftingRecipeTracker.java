@@ -9,8 +9,12 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
+//#if MC >= 12100
+import net.minecraft.recipe.input.CraftingRecipeInput;
+//#endif
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +68,6 @@ public class CraftingRecipeTracker extends Tracker{
 
     public RecipeTarget getFirstRecipeTarget(Item item, int targetCount) {
         ensureUpdated();
-
         return new RecipeTarget(item, targetCount, getFirstRecipeForItem(item));
     }
 
@@ -103,16 +106,68 @@ public class CraftingRecipeTracker extends Tracker{
 
         RecipeManagerWrapper recipeManager = RecipeManagerWrapper.of(networkHandler.getRecipeManager());
 
+        int processedRecipes = 0;
+
         for (WrappedRecipeEntry recipe : recipeManager.values()) {
             if (!(recipe.value() instanceof net.minecraft.recipe.CraftingRecipe craftingRecipe)) continue;
 
             // not implemented for now because it isn't needed (I hope xd)
             if (craftingRecipe instanceof SpecialCraftingRecipe) continue;
 
-            // the arguments shouldn't be used, we can just pass null
-            ItemStack result = new ItemStack(craftingRecipe.getResult(null).getItem(), craftingRecipe.getResult(null).getCount());
+            ItemStack resultStack;
+            List<Ingredient> ingredients;
 
-            Item[][] altoclefRecipeItems = getShapedCraftingRecipe(craftingRecipe.getIngredients());
+            if (craftingRecipe instanceof ShapedRecipe shapedRecipe) {
+                // Get result from the recipe
+                //#if MC >= 12100
+                resultStack = craftingRecipe.craft(CraftingRecipeInput.EMPTY, null);
+                //#elseif MC >= 12002
+                //$$ resultStack = shapedRecipe.getResult(null).copy();
+                //#elseif MC >= 11903
+                //$$ resultStack = shapedRecipe.getOutput(null).copy();
+                //#else
+                //$$ resultStack = shapedRecipe.getOutput().copy();
+                //#endif
+
+                // Get ingredients
+                //#if MC >= 12111
+                // In 1.21.11, ShapedRecipe.getIngredients() returns List<Optional<Ingredient>>
+                // We need to convert it to List<Ingredient> by unwrapping optionals
+                ingredients = new ArrayList<>();
+                for (java.util.Optional<Ingredient> opt : shapedRecipe.getIngredients()) {
+                    ingredients.add(opt.orElse(null));
+                }
+                //#else
+                //$$ ingredients = shapedRecipe.getIngredients();
+                //#endif
+            } else if (craftingRecipe instanceof ShapelessRecipe shapelessRecipe) {
+                // Get result from the recipe
+                //#if MC >= 12100
+                resultStack = craftingRecipe.craft(CraftingRecipeInput.EMPTY, null);
+                //#elseif MC >= 12002
+                //$$ resultStack = shapelessRecipe.getResult(null).copy();
+                //#elseif MC >= 11903
+                //$$ resultStack = shapelessRecipe.getOutput(null).copy();
+                //#else
+                //$$ resultStack = shapelessRecipe.getOutput().copy();
+                //#endif
+
+                // Get ingredients
+                //#if MC >= 12111
+                // In 1.21.11, ShapelessRecipe doesn't have getIngredients() method
+                // We need to get ingredients via getIngredientPlacement()
+                ingredients = shapelessRecipe.getIngredientPlacement().getIngredients();
+                //#else
+                //$$ ingredients = shapelessRecipe.getIngredients();
+                //#endif
+            } else {
+                // Skip other recipes
+                continue;
+            }
+
+            ItemStack result = new ItemStack(resultStack.getItem(), resultStack.getCount());
+
+            Item[][] altoclefRecipeItems = getShapedCraftingRecipe(ingredients);
 
             adris.altoclef.util.CraftingRecipe altoclefRecipe = adris.altoclef.util.CraftingRecipe.newShapedRecipe(altoclefRecipeItems, result.getCount());
 
@@ -126,6 +181,7 @@ public class CraftingRecipeTracker extends Tracker{
             }
 
             recipeResultMap.put(altoclefRecipe, result);
+            processedRecipes++;
         }
 
         itemRecipeMap.replaceAll((k,v) -> Collections.unmodifiableList(v));
@@ -141,19 +197,20 @@ public class CraftingRecipeTracker extends Tracker{
         int x = 0;
 
         for (Ingredient ingredient : ingredients) {
-            ItemStack[] stacks = ingredient.getMatchingStacks();
-            Item[] items = new Item[stacks.length];
-
-            for (int i = 0; i < stacks.length; i++) {
-                ItemStack stack = stacks[i];
-                if (stack.getCount() > 1) {
-                    throw new IllegalStateException("recipe needs more then one item on a slot... well... shit (ingredients: " + ingredient + ")");
-                }
-
-                items[i] = stack.getItem();
+            if (ingredient == null) {
+                result[x] = null;
+                x++;
+                continue;
             }
 
-            if (stacks.length != 0) {
+            Item[] items;
+            //#if MC >= 12111
+            items = ingredient.getMatchingItems().map(net.minecraft.registry.entry.RegistryEntry::value).toArray(Item[]::new);
+            //#else
+            //$$ items = Arrays.stream(ingredient.getMatchingStacks()).map(ItemStack::getItem).toArray(Item[]::new);
+            //#endif
+
+            if (items.length != 0) {
                 // FIXME this is so stupid, but TaskCatalogue is kinda setup this way, so it would require a rewrite to allow for multiple resource :')
                 result[x] = new Item[]{items[0]};
             } else {

@@ -30,6 +30,7 @@ public class CataloguedItemArg extends Arg<String> {
 
         boolean begins = listSuggestions().anyMatch(s -> s.startsWith(value));
 
+
         String errorMsg = "No catalogued item named '" + value+"'";
         if (begins) {
             throw new CommandNotFinishedException(errorMsg);

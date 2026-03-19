@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.Subscription;
 import adris.altoclef.eventbus.events.ChunkLoadEvent;
@@ -49,12 +48,10 @@ public abstract class SearchChunksExploreTask extends Task {
             }
 
             if (searcher.isActive() && searcher.isFinished()) {
-                Debug.logWarning("Target object search failed.");
                 alreadyExplored.addAll(searcher.getSearchedChunks());
                 searcher = null;
             } else if (searcher.finished()) {
                 setDebugState("Searching for target object...");
-                Debug.logMessage("Search finished.");
                 alreadyExplored.addAll(searcher.getSearchedChunks());
                 searcher = null;
             }
@@ -77,7 +74,6 @@ public abstract class SearchChunksExploreTask extends Task {
         if (isChunkWithinSearchSpace(AltoClef.getInstance(), pos)) {
             synchronized (searcherMutex) {
                 if (!alreadyExplored.contains(pos)) {
-                    Debug.logMessage("New searcher: " + pos);
                     searcher = new SearchSubTask(pos);
                 }
             }

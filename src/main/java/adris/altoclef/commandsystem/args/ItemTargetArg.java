@@ -27,7 +27,11 @@ public class ItemTargetArg extends Arg<ItemTarget> {
 
         Integer parsed = Arg.parseIfSupplied(reader, IntArg::parse);
         if (parsed != null) {
-            count = parsed;
+            if (parsed <= 0) {
+                count = 1;
+            } else {
+                count = parsed;
+            }
         }
 
         return new ItemTarget(item, count);

@@ -1,7 +1,6 @@
 package adris.altoclef.chains;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.multiversion.entity.PlayerVer;
 import adris.altoclef.multiversion.versionedfields.Blocks;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
@@ -107,7 +106,6 @@ public class UnstuckChain extends SingleTaskChain {
         if (state.getBlock() == Blocks.END_PORTAL_FRAME && !state.get(EndPortalFrameBlock.EYE)) {
             if (!mod.getFoodChain().isTryingToEat()) {
                 isProbablyStuck = true;
-
                 // for now let's just hope the other mechanisms will take care of cases where moving forward will get us in danger
                 mod.getInputControls().tryPress(Input.MOVE_FORWARD);
             }
@@ -129,7 +127,6 @@ public class UnstuckChain extends SingleTaskChain {
         }
 
         if (eatingTicks > 7*20) {
-            Debug.logMessage("the bot is probably stuck trying to eat... resetting action");
             foodChain.shouldStop(true);
 
             eatingTicks = 0;
@@ -156,7 +153,11 @@ public class UnstuckChain extends SingleTaskChain {
         }
 
         PlayerEntity player = mod.getPlayer();
-        posHistory.addFirst(player.getPos());
+        //#if MC >= 12111
+        posHistory.addFirst(player.getEntityPos());
+        //#else
+        //$$ posHistory.addFirst(player.getPos());
+        //#endif
         if (posHistory.size() > 500) {
             posHistory.removeLast();
         }

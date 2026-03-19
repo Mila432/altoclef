@@ -43,6 +43,9 @@ public class LocateDesertTempleTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return AltoClef.getInstance().getPlayer().getBlockPos().equals(_finalPos);
+        boolean finished = AltoClef.getInstance().getPlayer().getBlockPos().equals(_finalPos);
+        if (finished && _finalPos != null) {
+        }
+        return finished;
     }
 }

@@ -1,6 +1,5 @@
 package adris.altoclef.util.baritone;
 
-
 import baritone.api.pathing.goals.Goal;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -41,6 +40,9 @@ public class GoalBlockSide implements Goal {
         double dot = new Vec3d(dir.getX(), dir.getY(), dir.getZ()).dotProduct(delta);
         // WE ASSUME THAT dir IS NORMALIZED
         double distCorrect = dot;
-        return distCorrect - this.buffer;
+        double result = distCorrect - this.buffer;
+        if (Math.abs(result) < 0.1) {
+        }
+        return result;
     }
 }

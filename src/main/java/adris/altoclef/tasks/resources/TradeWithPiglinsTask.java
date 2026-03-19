@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.entity.AbstractDoToEntityTask;
@@ -65,7 +64,9 @@ public class TradeWithPiglinsTask extends ResourceTask {
             return goldTask;
         }
         if (!mod.getItemStorage().hasItem(Items.GOLD_INGOT)) {
-            if (goldTask == null) goldTask = TaskCatalogue.getItemTask(Items.GOLD_INGOT, goldBuffer);
+            if (goldTask == null) {
+                goldTask = TaskCatalogue.getItemTask(Items.GOLD_INGOT, goldBuffer);
+            }
             return goldTask;
         }
 
@@ -163,7 +164,6 @@ public class TradeWithPiglinsTask extends ResourceTask {
 
             if (_barterTimeout.elapsed()) {
                 // We failed bartering.
-                Debug.logMessage("Failed bartering with current piglin, blacklisting.");
                 _blacklisted.add(_currentlyBartering);
                 _barterTimeout.reset();
                 _currentlyBartering = null;
@@ -171,9 +171,12 @@ public class TradeWithPiglinsTask extends ResourceTask {
             }
 
             if (AVOID_HOGLINS && _currentlyBartering != null && !EntityHelper.isTradingPiglin(_currentlyBartering)) {
-                Optional<Entity> closestHoglin = mod.getEntityTracker().getClosestEntity(_currentlyBartering.getPos(), HoglinEntity.class);
+//#if MC >= 12111
+                Optional<Entity> closestHoglin = mod.getEntityTracker().getClosestEntity(_currentlyBartering.getEntityPos(), HoglinEntity.class);
+//#else
+//$$                 Optional<Entity> closestHoglin = mod.getEntityTracker().getClosestEntity(_currentlyBartering.getPos(), HoglinEntity.class);
+//#endif
                 if (closestHoglin.isPresent() && closestHoglin.get().isInRange(entity, HOGLIN_AVOID_TRADE_RADIUS)) {
-                    Debug.logMessage("Aborting further trading because a hoglin showed up");
                     _blacklisted.add(_currentlyBartering);
                     _barterTimeout.reset();
                     _currentlyBartering = null;
@@ -185,6 +188,7 @@ public class TradeWithPiglinsTask extends ResourceTask {
             if (mod.getSlotHandler().forceEquipItem(Items.GOLD_INGOT)) {
                 mod.getController().interactEntity(mod.getPlayer(), entity, Hand.MAIN_HAND);
                 _intervalTimeout.reset();
+            } else {
             }
             return null;
         }
@@ -192,7 +196,11 @@ public class TradeWithPiglinsTask extends ResourceTask {
         @Override
         protected Optional<Entity> getEntityTarget(AltoClef mod) {
             // Ignore trading piglins
-            Optional<Entity> found = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+//#if MC >= 12111
+            Optional<Entity> found = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getEntityPos(),
+//#else
+//$$             Optional<Entity> found = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+//#endif
                     entity -> {
                         if (_blacklisted.contains(entity)
                                 || EntityHelper.isTradingPiglin(entity)
@@ -203,8 +211,15 @@ public class TradeWithPiglinsTask extends ResourceTask {
 
                         if (AVOID_HOGLINS) {
                             // Avoid trading if hoglin is anywhere remotely nearby.
-                            Optional<Entity> closestHoglin = mod.getEntityTracker().getClosestEntity(entity.getPos(), HoglinEntity.class);
-                            return closestHoglin.isEmpty() || !closestHoglin.get().isInRange(entity, HOGLIN_AVOID_TRADE_RADIUS);
+//#if MC >= 12111
+                            Optional<Entity> closestHoglin = mod.getEntityTracker().getClosestEntity(entity.getEntityPos(), HoglinEntity.class);
+//#else
+//$$                             Optional<Entity> closestHoglin = mod.getEntityTracker().getClosestEntity(entity.getPos(), HoglinEntity.class);
+//#endif
+                            boolean hoglinTooClose = closestHoglin.isPresent() && closestHoglin.get().isInRange(entity, HOGLIN_AVOID_TRADE_RADIUS);
+                            if (hoglinTooClose) {
+                            }
+                            return !hoglinTooClose;
                         }
                         return true;
                     }, PiglinEntity.class

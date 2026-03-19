@@ -61,7 +61,10 @@ public class RunAwayFromHostilesTask extends CustomBaritoneGoalTask {
                 if (!includeSkeletons) {
                     stream = stream.filter(hostile -> !(hostile instanceof SkeletonEntity));
                 }
-                return stream.collect(Collectors.toList());
+                List<Entity> result = stream.collect(Collectors.toList());
+                if (result.isEmpty()) {
+                }
+                return result;
             }
         }
     }

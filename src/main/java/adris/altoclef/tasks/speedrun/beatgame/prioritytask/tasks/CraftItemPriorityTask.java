@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.speedrun.beatgame.prioritytask.tasks;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasks.CraftInInventoryTask;
 import adris.altoclef.tasks.container.CraftInTableTask;
 import adris.altoclef.tasks.speedrun.beatgame.BeatMinecraftTask;
@@ -56,6 +55,8 @@ public class CraftItemPriorityTask extends PriorityTask{
     @Override
     protected double getPriority(AltoClef mod) {
         if (BeatMinecraftTask.hasItem(mod, recipeTarget.getOutputItem())) {
+            if (!satisfied) {
+            }
             Debug.logInternal("THIS IS SATISFIED "+recipeTarget.getOutputItem());
             satisfied = true;
         }
@@ -69,7 +70,8 @@ public class CraftItemPriorityTask extends PriorityTask{
 
     @Override
     public boolean needCraftingOnStart(AltoClef mod) {
-        return CraftingHelper.canCraftItemNow(mod, recipeTarget.getOutputItem());
+        boolean canCraft = CraftingHelper.canCraftItemNow(mod, recipeTarget.getOutputItem());
+        return canCraft;
     }
 
     public boolean isSatisfied() {

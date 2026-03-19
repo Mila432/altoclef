@@ -1,5 +1,6 @@
 package adris.altoclef.eventbus.events;
 
+
 import adris.altoclef.tasksystem.Task;
 
 public class TaskFinishedEvent {

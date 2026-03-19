@@ -1,7 +1,7 @@
 package adris.altoclef.tasks.speedrun;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
+import adris.altoclef.Debug; // Already imported
 import adris.altoclef.tasks.construction.DestroyBlockTask;
 import adris.altoclef.tasks.construction.PlaceBlockTask;
 import adris.altoclef.tasks.movement.GetToBlockTask;
@@ -88,7 +88,11 @@ public class KillEnderDragonWithBedsTask extends Task {
 
         BlockPos obsidianTarget = endPortalTop.up().offset(Direction.NORTH);
         if (!mod.getWorld().getBlockState(obsidianTarget).getBlock().equals(Blocks.OBSIDIAN)) {
-            if (WorldHelper.inRangeXZ(mod.getPlayer().getPos(), new Vec3d(0, 0, 0), 10)) {
+            //#if MC >= 12111
+            if (WorldHelper.inRangeXZ(mod.getPlayer().getEntityPos(), new Vec3d(0, 0, 0), 10)) {
+            //#else
+            //$$ if (WorldHelper.inRangeXZ(mod.getPlayer().getPos(), new Vec3d(0, 0, 0), 10)) {
+            //#endif
                 if (placeObsidianTask == null) {
                     placeObsidianTask = new PlaceBlockTask(obsidianTarget, Blocks.OBSIDIAN);
                 }
@@ -122,11 +126,12 @@ public class KillEnderDragonWithBedsTask extends Task {
             }
         }
         List<EnderDragonEntity> dragons = mod.getEntityTracker().getTrackedEntities(EnderDragonEntity.class);
+        if (dragons.isEmpty()) {
+        }
         for (EnderDragonEntity dragon : dragons) {
             Phase dragonPhase = dragon.getPhaseManager().getCurrent();
 
             if (dragonPhase.getType() == PhaseType.DYING) {
-                Debug.logMessage("Dragon is dead.");
                 if (mod.getPlayer().getPitch() != -90) {
                     mod.getPlayer().setPitch(-90);
                 }
@@ -164,6 +169,9 @@ public class KillEnderDragonWithBedsTask extends Task {
         mod.getSlotHandler().forceEquipItemToOffhand(Items.AIR);
 
         BlockPos endPortalTop = KillEnderDragonWithBedsTask.locateExitPortalTop(mod).up();
+        if (endPortalTop == null) {
+            return null;
+        }
         BlockPos obsidian = null;
         Direction dir = null;
 
@@ -183,7 +191,11 @@ public class KillEnderDragonWithBedsTask extends Task {
         Direction offsetDir = dir.getAxis() == Direction.Axis.X ? Direction.SOUTH : Direction.WEST;
         BlockPos targetBlock = endPortalTop.down(3).offset(offsetDir, 3).offset(dir);
 
-        double d = distanceIgnoreY(WorldHelper.toVec3d(targetBlock), mod.getPlayer().getPos());
+        //#if MC >= 12111
+        double d = distanceIgnoreY(WorldHelper.toVec3d(targetBlock), mod.getPlayer().getEntityPos());
+        //#else
+        //$$ double d = distanceIgnoreY(WorldHelper.toVec3d(targetBlock), mod.getPlayer().getPos());
+        //#endif
         if (d > 0.7 || mod.getPlayer().getBlockPos().down().getY() > endPortalTop.getY() - 4) {
             mod.log(d + "");
             return new GetToBlockTask(targetBlock);
@@ -228,12 +240,14 @@ public class KillEnderDragonWithBedsTask extends Task {
 
         mod.log(destroyDistance + " : " + dist + " : " + distXZ);
 
-        if ((dist < 1.5 || (prevDist < distXZ && destroyDistance < 4 && prevDist < 2.9)) || (destroyDistance < 2 && dist < 4)
-                || (destroyDistance < 1.7 && dist < 4.5) || tooClose || (destroyDistance < 2.4 && distXZ < 3.7) || (destroyDistance < 3.5 && distXZ < 2.4)) {
-
+        boolean placementCondition = (dist < 1.5 || (prevDist < distXZ && destroyDistance < 4 && prevDist < 2.9)) || (destroyDistance < 2 && dist < 4)
+                || (destroyDistance < 1.7 && dist < 4.5) || tooClose || (destroyDistance < 2.4 && distXZ < 3.7) || (destroyDistance < 3.5 && distXZ < 2.4);
+        
+        if (placementCondition) {
             if (!skip) {
                 mod.getInputControls().tryPress(Input.CLICK_RIGHT);
                 placeBedTimer.reset();
+            } else {
             }
         }
 

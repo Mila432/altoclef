@@ -18,11 +18,17 @@ public class BlockPosDeserializer extends AbstractVectorDeserializer<BlockPos, I
 
     @Override
     protected Integer parseUnit(String unit) throws Exception {
-        return Integer.parseInt(unit);
+        try {
+            return Integer.parseInt(unit);
+        } catch (NumberFormatException e) {
+            throw e;
+        }
     }
 
     @Override
     protected BlockPos deserializeFromUnits(List<Integer> units) {
+        if (units.size() != 3) {
+        }
         return new BlockPos(units.get(0), units.get(1), units.get(2));
     }
 

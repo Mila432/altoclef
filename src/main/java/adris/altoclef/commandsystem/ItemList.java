@@ -10,6 +10,8 @@ public class ItemList {
     public ItemTarget[] items;
 
     public ItemList(ItemTarget[] items) {
+        if (items == null) {
+        }
         this.items = items;
     }
 

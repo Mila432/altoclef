@@ -92,19 +92,27 @@ public class RavageRuinedPortalsTask extends Task {
         if (mod.getWorld().getBlockState(blockPos.up(1)).getBlock() == Blocks.WATER || blockPos.getY() < 50) {
             return false;
         }
+        boolean foundNetherrack = false;
         for (BlockPos check : WorldHelper.scanRegion(blockPos.add(-4,-2,-4), blockPos.add(4,2,4))) {
             if (mod.getWorld().getBlockState(check).getBlock() == Blocks.NETHERRACK) {
-                return true;
+                foundNetherrack = true;
+                break;
             }
         }
-        notRuinedPortalChests.add(blockPos);
-        return false;
+        if (!foundNetherrack) {
+            notRuinedPortalChests.add(blockPos);
+            return false;
+        }
+        return true;
     }
 
     private Optional<BlockPos> locateClosestUnopenedRuinedPortalChest(AltoClef mod) {
         if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             return Optional.empty();
         }
-        return mod.getBlockScanner().getNearestBlock(blockPos -> !notRuinedPortalChests.contains(blockPos) && WorldHelper.isUnopenedChest(blockPos) && canBeLootablePortalChest(mod, blockPos), Blocks.CHEST);
+        Optional<BlockPos> result = mod.getBlockScanner().getNearestBlock(blockPos -> !notRuinedPortalChests.contains(blockPos) && WorldHelper.isUnopenedChest(blockPos) && canBeLootablePortalChest(mod, blockPos), Blocks.CHEST);
+        if (!result.isPresent()) {
+        }
+        return result;
     }
 }

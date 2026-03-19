@@ -35,6 +35,8 @@ public class InventoryCommand extends Command {
                     counts.put(name, counts.get(name) + stack.getCount());
                 }
             }
+            if (counts.isEmpty()) {
+            }
             // Print
             mod.log("INVENTORY: ", MessagePriority.OPTIONAL);
             for (String name : counts.keySet()) {

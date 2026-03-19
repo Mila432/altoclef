@@ -10,7 +10,9 @@ import adris.altoclef.commandsystem.exception.RuntimeCommandException;
 import adris.altoclef.tasks.misc.EquipArmorTask;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.ItemHelper;
-import net.minecraft.item.Equipment;
+//#if MC < 12111
+//$$ import net.minecraft.item.ArmorItem;
+//#endif
 import net.minecraft.item.Item;
 
 import java.util.Arrays;
@@ -36,13 +38,35 @@ public class EquipCommand extends Command {
 
         for (ItemTarget target : items) {
             for (Item item : target.getMatches()) {
-                if (!(item instanceof Equipment)) {
+                if (!isArmorItem(item)) {
                     throw new RuntimeCommandException("'"+item.toString().toUpperCase() + "' cannot be equipped!");
                 }
             }
         }
 
         mod.runUserTask(new EquipArmorTask(items.toArray(new ItemTarget[0])), this::finish);
+    }
+
+    private static boolean isArmorItem(Item item) {
+        //#if MC >= 12111
+        net.minecraft.component.type.EquippableComponent component = item.getComponents().get(net.minecraft.component.DataComponentTypes.EQUIPPABLE);
+        if (component != null) {
+            net.minecraft.entity.EquipmentSlot slot = component.slot();
+            if (slot == null) {
+                return false;
+            }
+            boolean isArmorSlot = slot == net.minecraft.entity.EquipmentSlot.HEAD
+                || slot == net.minecraft.entity.EquipmentSlot.CHEST
+                || slot == net.minecraft.entity.EquipmentSlot.LEGS
+                || slot == net.minecraft.entity.EquipmentSlot.FEET;
+            if (!isArmorSlot) {
+            }
+            return isArmorSlot;
+        }
+        return false;
+        //#else
+        //$$ return item instanceof ArmorItem;
+        //#endif
     }
 
 
@@ -84,7 +108,9 @@ public class EquipCommand extends Command {
         }
 
         private static boolean isEquipment(String cataloguedItem) {
-            return Arrays.stream(new ItemTarget(cataloguedItem).getMatches()).anyMatch(i -> i instanceof Equipment);
+            ItemTarget target = new ItemTarget(cataloguedItem);
+            Item[] matches = target.getMatches();
+            return Arrays.stream(matches).anyMatch(EquipCommand::isArmorItem);
         }
     }
 

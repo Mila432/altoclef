@@ -61,6 +61,7 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
 				place(targetPlacePos, Hand.MAIN_HAND, slot.get().getInventorySlot());
 				targetPlacePos = null;
 				setDebugState(null);
+			} else {
 			}
 			return null;
 		}
@@ -74,8 +75,13 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
         	return false;
         }, SkeletonEntity.class);
         if(sentity.isPresent()) {
-    		Vec3d playerPos = mod.getPlayer().getPos();
-            Vec3d targetPos = sentity.get().getPos();
+    		//#if MC >= 12111
+    		Vec3d playerPos = mod.getPlayer().getEntityPos();
+            Vec3d targetPos = sentity.get().getEntityPos();
+    		//#else
+            //$$ Vec3d playerPos = mod.getPlayer().getPos();
+            //$$ Vec3d targetPos = sentity.get().getPos();
+            //#endif
     		// Calculate the direction vector towards the target entity
             Vec3d direction = playerPos.subtract(targetPos).normalize();
 
@@ -94,7 +100,6 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
 	@Override
 	protected void onStop(Task interruptTask) {
 		// TODO Auto-generated method stub
-		
 	}
 	
 	@Override
@@ -110,7 +115,12 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
         	return false;
         }, SkeletonEntity.class);
         
-        return targetPlacePos != null && WorldHelper.isSolidBlock(targetPlacePos) || entity.isEmpty();
+        boolean wallPlaced = targetPlacePos != null && WorldHelper.isSolidBlock(targetPlacePos);
+        boolean noThreat = entity.isEmpty();
+        boolean finished = wallPlaced || noThreat;
+        if (finished) {
+        }
+        return finished;
     }
 
 	@Override
@@ -127,8 +137,8 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
 	
 	public Direction getPlaceSide(BlockPos blockPos) {
         for (Direction side : Direction.values()) {
-            BlockPos neighbor = blockPos.offset(side);
-            BlockState state = mod.getWorld().getBlockState(neighbor);
+            BlockPos neighbour = blockPos.offset(side);
+            BlockState state = mod.getWorld().getBlockState(neighbour);
 
             // Check if neighbour isn't empty
             if (state.isAir() || isClickable(state.getBlock())) continue;
@@ -143,8 +153,12 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
     }
 	
 	public boolean place(BlockPos blockPos, Hand hand, int slot) {
-        if (slot < 0 || slot > 8) return false;
-        if (!canPlace(blockPos)) return false;
+        if (slot < 0 || slot > 8) {
+            return false;
+        }
+        if (!canPlace(blockPos)) {
+            return false;
+        }
 
         Vec3d hitPos = Vec3d.ofCenter(blockPos);
 
@@ -167,7 +181,6 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
 
         interact(bhr, hand);
 
-
         return true;
     }
     
@@ -186,29 +199,57 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
     }
 	
 	public void interact(BlockHitResult blockHitResult, Hand hand) {
-        boolean wasSneaking = mod.getPlayer().input.sneaking;
-        mod.getPlayer().input.sneaking = false;
+        boolean wasSneaking;
+        //#if MC >= 12111
+        wasSneaking = mod.getPlayer().isSneaking();
+        mod.getPlayer().setSneaking(false);
+        //#else
+        //$$ wasSneaking = mod.getPlayer().input.sneaking;
+        //$$ mod.getPlayer().input.sneaking = false;
+        //#endif
 
         ActionResult result = mod.getController().interactBlock(mod.getPlayer(),hand, blockHitResult);
 
-        if (result.shouldSwingHand()) {
+        //#if MC >= 12111
+        if (result instanceof ActionResult.Success success && success.swingSource() == ActionResult.SwingSource.CLIENT) {
             mod.getPlayer().swingHand(hand);
+        } else {
         }
+        //#else
+        //$$ if (result.shouldSwingHand()) {
+        //$$     mod.getPlayer().swingHand(hand);
+        //$$ } else {
+        //$$     Debug.logWarning("Block interaction at " + blockHitResult.getBlockPos() + " did not result in hand swing: " + result);
+        //$$ }
+        //#endif
 
-        mod.getPlayer().input.sneaking = wasSneaking;
+        //#if MC >= 12111
+        mod.getPlayer().setSneaking(wasSneaking);
+        //#else
+        //$$ mod.getPlayer().input.sneaking = wasSneaking;
+        //#endif
     }
 
 	public boolean canPlace(BlockPos blockPos, boolean checkEntities) {
-        if (blockPos == null) return false;
+        if (blockPos == null) {
+            return false;
+        }
 
         // Check y level
-        if (!World.isValid(blockPos) || !AltoClef.getInstance().getWorld().isInBuildLimit(blockPos)) return false;
+        if (!World.isValid(blockPos) || !AltoClef.getInstance().getWorld().isInBuildLimit(blockPos)) {
+            return false;
+        }
 
         // Check if current block is replaceable
-        if (!mod.getWorld().getBlockState(blockPos).isReplaceable()) return false;
+        if (!mod.getWorld().getBlockState(blockPos).isReplaceable()) {
+            return false;
+        }
 
         // Check if intersects entities
-        return !checkEntities || mod.getWorld().canPlace(Blocks.OBSIDIAN.getDefaultState(), blockPos, ShapeContext.absent());
+        boolean canPlace = !checkEntities || mod.getWorld().canPlace(Blocks.OBSIDIAN.getDefaultState(), blockPos, ShapeContext.absent());
+        if (!canPlace) {
+        }
+        return canPlace;
     }
 
     public boolean canPlace(BlockPos blockPos) {
@@ -217,9 +258,15 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
 	
     public boolean swap(int slot) {
         if (slot == PlayerSlot.OFFHAND_SLOT.getInventorySlot()) return true;
-        if (slot < 0 || slot > 8) return false;
+        if (slot < 0 || slot > 8) {
+            return false;
+        }
 
-        mod.getPlayer().getInventory().selectedSlot = slot;
+        //#if MC >= 12111
+        mod.getPlayer().getInventory().setSelectedSlot(slot);
+        //#else
+        //$$ mod.getPlayer().getInventory().selectedSlot = slot;
+        //#endif
         return true;
     }
     

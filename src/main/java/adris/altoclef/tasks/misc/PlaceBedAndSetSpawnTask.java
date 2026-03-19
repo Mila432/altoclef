@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.misc;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.Subscription;
@@ -213,7 +212,6 @@ public class PlaceBedAndSetSpawnTask extends Task {
 
         if (!progressChecker.check(mod) && currentBedRegion != null) {
             progressChecker.reset();
-            Debug.logMessage("Searching new bed region.");
             currentBedRegion = null;
         }
         if (WorldHelper.isInNetherPortal()) {
@@ -238,19 +236,30 @@ public class PlaceBedAndSetSpawnTask extends Task {
 
         if (sleepAttemptMade) {
             if (bedInteractTimeout.elapsed()) {
-                Debug.logMessage("Failed to get \"Respawn point set\" message or sleeping, assuming that this bed already contains our spawn.");
                 spawnSet = true;
                 return null;
             }
         }
         if (mod.getBlockScanner().anyFound(blockPos -> (WorldHelper.canReach(blockPos) &&
-                blockPos.isWithinDistance(mod.getPlayer().getPos(), 40) &&
+                blockPos.isWithinDistance(
+                        //#if MC >= 12111
+                        mod.getPlayer().getEntityPos()
+                        //#else
+                        //$$ mod.getPlayer().getPos()
+                        //#endif
+                , 40) &&
                 mod.getItemStorage().hasItem(ItemHelper.BED)) || (WorldHelper.canReach(blockPos) &&
                 !mod.getItemStorage().hasItem(ItemHelper.BED)), ItemHelper.itemsToBlocks(ItemHelper.BED))) {
             // Sleep in the nearest bed
             setDebugState("Going to bed to sleep...");
             return new DoToClosestBlockTask(toSleepIn -> {
-                boolean closeEnough = toSleepIn.isWithinDistance(mod.getPlayer().getPos(), 3);
+                boolean closeEnough = toSleepIn.isWithinDistance(
+                        //#if MC >= 12111
+                        mod.getPlayer().getEntityPos()
+                        //#else
+                        //$$ mod.getPlayer().getPos()
+                        //#endif
+                , 3);
                 if (closeEnough) {
                     // why 0.2? I'm tired.
                     Vec3d centerBed = new Vec3d(toSleepIn.getX() + 0.5, toSleepIn.getY() + 0.2, toSleepIn.getZ() + 0.5);
@@ -316,9 +325,10 @@ public class PlaceBedAndSetSpawnTask extends Task {
 
         if (currentBedRegion == null) {
             if (regionScanTimer.elapsed()) {
-                Debug.logMessage("Rescanning for nearby bed place position...");
                 regionScanTimer.reset();
                 currentBedRegion = this.locateBedRegion(mod, mod.getPlayer().getBlockPos());
+                if (currentBedRegion == null) {
+                }
             }
         }
         if (currentBedRegion == null) {
@@ -527,7 +537,13 @@ public class PlaceBedAndSetSpawnTask extends Task {
                 outer:
                 for (int y = origin.getY() - SCAN_RANGE; y < origin.getY() + SCAN_RANGE; ++y) {
                     BlockPos attemptPos = new BlockPos(x, y, z);
-                    double distance = BlockPosVer.getSquaredDistance(attemptPos,mod.getPlayer().getPos());
+                    double distance = BlockPosVer.getSquaredDistance(attemptPos,
+                            //#if MC >= 12111
+                            mod.getPlayer().getEntityPos()
+                            //#else
+                            //$$ mod.getPlayer().getPos()
+                            //#endif
+                    );
 
                     Debug.logInternal("Checking position: " + attemptPos);
 

@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.speedrun;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.multiversion.OptionsVer;
 import adris.altoclef.tasks.DoToClosestBlockTask;
@@ -81,6 +80,18 @@ public class KillEnderDragonTask extends Task {
 
         if (exitPortalTop == null) {
             exitPortalTop = locateExitPortalTop(mod);
+            if (exitPortalTop == null) {
+                // Log if we still can't locate the portal after being in the End
+                if (mod.getPlayer() != null) {
+                    //#if MC >= 12111
+                    Vec3d playerPos = mod.getPlayer().getEntityPos();
+                    //#else
+                    //$$ Vec3d playerPos = mod.getPlayer().getPos();
+                    //#endif
+                    if (playerPos != null) {
+                    }
+                }
+            }
         }
 
         // Collect the following if dropped:
@@ -110,7 +121,6 @@ public class KillEnderDragonTask extends Task {
                 }
             } catch (NullPointerException e) {
                 // Should never happen.
-                Debug.logError("NullpointerException that Should never happen.");
                 e.printStackTrace();
             }
         }
@@ -135,11 +145,17 @@ public class KillEnderDragonTask extends Task {
         // If there are crystals, suicide blow em up.
         // If there are no crystals, punk the dragon if it's close.
         int MINIMUM_BUILDING_BLOCKS = 1;
-        if (mod.getEntityTracker().entityFound(EndCrystalEntity.class) && mod.getItemStorage().getItemCount(Items.DIRT, Items.COBBLESTONE, Items.NETHERRACK, Items.END_STONE) < MINIMUM_BUILDING_BLOCKS || (collectBuildMaterialsTask.isActive() && !collectBuildMaterialsTask.isFinished())) {
+        boolean hasCrystals = mod.getEntityTracker().entityFound(EndCrystalEntity.class);
+        int buildingBlockCount = mod.getItemStorage().getItemCount(Items.DIRT, Items.COBBLESTONE, Items.NETHERRACK, Items.END_STONE);
+        boolean collectTaskActive = collectBuildMaterialsTask.isActive() && !collectBuildMaterialsTask.isFinished();
+        boolean needsBuildingBlocks = hasCrystals && buildingBlockCount < MINIMUM_BUILDING_BLOCKS || collectTaskActive;
+        
+        if (needsBuildingBlocks) {
             if (StorageHelper.miningRequirementMetInventory(MiningRequirement.WOOD)) {
                 mod.getBehaviour().addProtectedItems(Items.END_STONE);
                 setDebugState("Collecting building blocks to pillar to crystals");
                 return collectBuildMaterialsTask;
+            } else {
             }
         } else {
             mod.getBehaviour().removeProtectedItems(Items.END_STONE);
@@ -192,7 +208,9 @@ public class KillEnderDragonTask extends Task {
     private BlockPos locateExitPortalTop(AltoClef mod) {
         if (!mod.getChunkTracker().isChunkLoaded(new BlockPos(0, 64, 0))) return null;
         int height = WorldHelper.getGroundHeight(0, 0, Blocks.BEDROCK);
-        if (height != -1) return new BlockPos(0, height, 0);
+        if (height != -1) {
+            return new BlockPos(0, height, 0);
+        }
         return null;
     }
 
@@ -274,6 +292,8 @@ public class KillEnderDragonTask extends Task {
                 return null;
             }
             List<EnderDragonEntity> dragons = mod.getEntityTracker().getTrackedEntities(EnderDragonEntity.class);
+            if (dragons.size() > 1) {
+            }
             if (!dragons.isEmpty()) {
                 for (EnderDragonEntity dragon : dragons) {
                     Phase dragonPhase = dragon.getPhaseManager().getCurrent();
@@ -282,19 +302,30 @@ public class KillEnderDragonTask extends Task {
                     switch (_mode) {
                         case RAILING -> {
                             if (!perchingOrGettingReady) {
-                                Debug.logMessage("Dragon no longer perching.");
                                 mod.getClientBaritone().getCustomGoalProcess().onLostControl();
                                 _mode = Mode.WAITING_FOR_PERCH;
                                 break;
                             }
                             //DamageSource.DRAGON_BREATH
                             Entity head = dragon.head;
+                            if (head == null) {
+                                break;
+                            }
                             // Go for the head
-                            if (head.isInRange(mod.getPlayer(), 7.5) && dragon.ticksSinceDeath <= 1) {
+                            boolean inRange = head.isInRange(mod.getPlayer(), 7.5);
+                            boolean dragonAlive = dragon.ticksSinceDeath <= 1;
+                            if (inRange && dragonAlive) {
                                 // Equip weapon
                                 AbstractKillEntityTask.equipWeapon(mod);
                                 // Look torwards da dragon
-                                Vec3d targetLookPos = head.getPos().add(0, 3, 0);
+                                //#if MC >= 12111
+                                Vec3d targetLookPos = head.getEntityPos().add(0, 3, 0);
+                                //#else
+                                //$$ Vec3d targetLookPos = head.getPos().add(0, 3, 0);
+                                //#endif
+                                if (targetLookPos == null) {
+                                    break;
+                                }
                                 Rotation targetRotation = RotationUtils.calcRotationFromVec3d(mod.getClientBaritone().getPlayerContext().playerHead(), targetLookPos, mod.getClientBaritone().getPlayerContext().playerRotations());
                                 mod.getClientBaritone().getLookBehavior().updateTarget(targetRotation, true);
                                 // Also look towards da dragon
@@ -315,7 +346,11 @@ public class KillEnderDragonTask extends Task {
                                             // We have sort of a rounded circle here.
                                             if (Math.abs(dx) == 2 && Math.abs(dz) == 2) continue;
                                             BlockPos toCheck = exitPortalTop.add(dx,bottomYDelta,dz);
-                                            double distSq = BlockPosVer.getSquaredDistance(toCheck,head.getPos());
+                                            //#if MC >= 12111
+                                            double distSq = BlockPosVer.getSquaredDistance(toCheck, head.getEntityPos());
+                                            //#else
+                                            //$$ double distSq = BlockPosVer.getSquaredDistance(toCheck, head.getPos());
+                                            //#endif
                                             if (distSq < closestDist) {
                                                 closest = toCheck;
                                                 closestDist = distSq;
@@ -326,7 +361,9 @@ public class KillEnderDragonTask extends Task {
                                         mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(
                                                 new GoalGetToBlock(closest)
                                         );
+                                    } else {
                                     }
+                                } else {
                                 }
                             }
                             setDebugState("Railing on dragon");
@@ -336,7 +373,6 @@ public class KillEnderDragonTask extends Task {
                             if (perchingOrGettingReady) {
                                 // We're perching!!
                                 mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-                                Debug.logMessage("Dragon perching detected. Dabar duosiu į snuki.");
                                 _mode = Mode.RAILING;
                                 break;
                             }
@@ -346,14 +382,16 @@ public class KillEnderDragonTask extends Task {
                             }
                             if (_randomWanderPos != null && _randomWanderChangeTimeout.elapsed()) {
                                 _randomWanderPos = null;
-                                Debug.logMessage("Reset wander pos after timeout, oof");
                             }
                             if (_randomWanderPos == null) {
                                 _randomWanderPos = getRandomWanderPos(mod);
+                                if (_randomWanderPos == null) {
+                                } else {
+                                }
                                 _randomWanderChangeTimeout.reset();
                                 mod.getClientBaritone().getCustomGoalProcess().onLostControl();
                             }
-                            if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
+                            if (!mod.getClientBaritone().getCustomGoalProcess().isActive() && _randomWanderPos != null) {
                                 mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(
                                         new GoalGetToBlock(_randomWanderPos)
                                 );
@@ -394,7 +432,6 @@ public class KillEnderDragonTask extends Task {
 
             while (pos == null) {
                 if (allowed-- < 0) {
-                    Debug.logWarning("Failed to find random solid ground in end, this may lead to problems.");
                     return null;
                 }
                 double radius = MIN_RADIUS + (RADIUS_RANGE - MIN_RADIUS) * Math.random();

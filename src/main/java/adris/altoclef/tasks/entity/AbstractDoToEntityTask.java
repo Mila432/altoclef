@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.entity;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.GetToEntityTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasks.speedrun.beatgame.BeatMinecraftTask;
@@ -112,19 +111,20 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
                 mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(maintainDistance, entity.getBlockPos()));
             }
 
-            if (mod.getControllerExtras().inRange(entity) && result != null &&
+            boolean canInteract = mod.getControllerExtras().inRange(entity) && result != null &&
                     result.getType() == HitResult.Type.ENTITY && !mod.getFoodChain().needsToEat() &&
                     !mod.getMLGBucketChain().isFalling(mod) && mod.getMLGBucketChain().doneMLG() &&
                     !mod.getMLGBucketChain().isChorusFruiting() &&
                     mod.getClientBaritone().getPathingBehavior().isSafeToCancel() &&
-                    mod.getPlayer().isOnGround()) {
+                    mod.getPlayer().isOnGround();
+
+            if (canInteract) {
                 progress.reset();
                 return onEntityInteract(mod, entity);
             } else if (!tooClose) {
                 setDebugState("Approaching target");
                 if (!progress.check(mod)) {
                     progress.reset();
-                    Debug.logMessage("Failed to get to target, blacklisting.");
                     mod.getEntityTracker().requestEntityUnreachable(entity);
                 }
                 // Move to target

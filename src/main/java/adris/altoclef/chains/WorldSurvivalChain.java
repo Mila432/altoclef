@@ -52,24 +52,39 @@ public class WorldSurvivalChain extends SingleTaskChain {
         handleDrowning(mod);
 
         // Lava Escape
-        if (isInLavaOhShit(mod) && mod.getBehaviour().shouldEscapeLava()) {
+        boolean inLavaOhShit = isInLavaOhShit(mod);
+        boolean shouldEscapeLava = mod.getBehaviour().shouldEscapeLava();
+        if (inLavaOhShit && shouldEscapeLava) {
             setTask(new EscapeFromLavaTask(mod));
             return 100;
         }
 
         // Fire escape
-        if (isInFire(mod)) {
+        boolean inFire = isInFire(mod);
+        if (inFire) {
             setTask(new DoToClosestBlockTask(PutOutFireTask::new, Blocks.FIRE, Blocks.SOUL_FIRE));
             return 100;
         }
 
         // Extinguish with water
         if (mod.getModSettings().shouldExtinguishSelfWithWater()) {
-            if (!(mainTask instanceof EscapeFromLavaTask && isCurrentlyRunning(mod)) && mod.getPlayer().isOnFire() && !mod.getPlayer().hasStatusEffect(StatusEffects.FIRE_RESISTANCE) && !mod.getWorld().getDimension().ultrawarm()) {
+            boolean isNetherLike;
+            //#if MC >= 12111
+            isNetherLike = mod.getWorld().getRegistryKey() == net.minecraft.world.World.NETHER;
+            //#else
+            //$$ isNetherLike = mod.getWorld().getDimension().ultrawarm();
+            //#endif
+            boolean notLavaTaskRunning = !(mainTask instanceof EscapeFromLavaTask && isCurrentlyRunning(mod));
+            boolean isOnFire = mod.getPlayer().isOnFire();
+            boolean noFireResist = !mod.getPlayer().hasStatusEffect(StatusEffects.FIRE_RESISTANCE);
+            boolean notNether = !isNetherLike;
+            if (notLavaTaskRunning && isOnFire && noFireResist && notNether) {
                 // Extinguish ourselves
                 if (mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
                     BlockPos targetWaterPos = mod.getPlayer().getBlockPos();
-                    if (WorldHelper.isSolidBlock(targetWaterPos.down()) && WorldHelper.canPlace(targetWaterPos)) {
+                    boolean solidBelow = WorldHelper.isSolidBlock(targetWaterPos.down());
+                    boolean canPlace = WorldHelper.canPlace(targetWaterPos);
+                    if (solidBelow && canPlace) {
                         Optional<Rotation> reach = LookHelper.getReach(targetWaterPos.down(), Direction.UP);
                         if (reach.isPresent()) {
                             mod.getClientBaritone().getLookBehavior().updateTarget(reach.get(), true);
@@ -119,7 +134,9 @@ public class WorldSurvivalChain extends SingleTaskChain {
         boolean avoidedDrowning = false;
         if (mod.getModSettings().shouldAvoidDrowning()) {
             if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                if (mod.getPlayer().isTouchingWater() && mod.getPlayer().getAir() < mod.getPlayer().getMaxAir()) {
+                boolean touchingWater = mod.getPlayer().isTouchingWater();
+                boolean lowAir = mod.getPlayer().getAir() < mod.getPlayer().getMaxAir();
+                if (touchingWater && lowAir) {
                     // Swim up!
                     mod.getInputControls().hold(Input.JUMP);
                     //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.JUMP, true);

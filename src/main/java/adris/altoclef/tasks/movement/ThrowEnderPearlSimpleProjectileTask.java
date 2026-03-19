@@ -29,7 +29,8 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
         float range = 3f;
         Vec3d delta = LookHelper.toVec3d(rotation).multiply(range);
         Vec3d start = LookHelper.getCameraPos(mod);
-        return LookHelper.cleanLineOfSight(start.add(delta), range);
+        boolean clean = LookHelper.cleanLineOfSight(start.add(delta), range);
+        return clean;
     }
 
     private static Rotation calculateThrowLook(AltoClef mod, BlockPos end) {
@@ -40,6 +41,9 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
         float yaw = LookHelper.getLookRotation(mod, end).getYaw();
         double flatDistance = WorldHelper.distanceXZ(start, endCenter);
         double[] pitches = ProjectileHelper.calculateAnglesForSimpleProjectileMotion(start.y - endCenter.y, flatDistance, speed, gravity);
+        if (pitches == null || pitches.length < 2) {
+            return new Rotation(yaw, 0);
+        }
         double pitch = cleanThrow(mod, yaw, (float) pitches[0]) ? pitches[0] : pitches[1];
         return new Rotation(yaw, -1 * (float) pitch);
     }
@@ -62,11 +66,14 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
             if (mod.getSlotHandler().forceEquipItem(Items.ENDER_PEARL)) {
                 Rotation lookTarget = calculateThrowLook(mod, _target);
                 LookHelper.lookAt(lookTarget);
-                if (LookHelper.isLookingAt(mod, lookTarget)) {
+                boolean isLooking = LookHelper.isLookingAt(mod, lookTarget);
+                if (isLooking) {
                     mod.getInputControls().tryPress(Input.CLICK_RIGHT);
                     _thrown = true;
                     _thrownTimer.reset();
+                } else {
                 }
+            } else {
             }
         }
         return null;
@@ -79,7 +86,15 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return _thrown && _thrownTimer.elapsed() || (!_thrown && !AltoClef.getInstance().getItemStorage().hasItem(Items.ENDER_PEARL));
+        boolean thrownFinished = _thrown && _thrownTimer.elapsed();
+        boolean noPearlFinished = !_thrown && !AltoClef.getInstance().getItemStorage().hasItem(Items.ENDER_PEARL);
+        if (thrownFinished) {
+            return true;
+        }
+        if (noPearlFinished) {
+            return true;
+        }
+        return false;
     }
 
     @Override

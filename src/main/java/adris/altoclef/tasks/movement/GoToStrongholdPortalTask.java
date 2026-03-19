@@ -42,7 +42,9 @@ public class GoToStrongholdPortalTask extends Task {
 
             _strongholdCoordinates = _locateCoordsTask.getStrongholdCoordinates().orElse(null);
             if (_strongholdCoordinates == null) {
-                if (mod.getItemStorage().getItemCount(Items.ENDER_EYE) < MINIMUM_EYES && mod.getEntityTracker().itemDropped(Items.ENDER_EYE)) {
+                int currentEyes = mod.getItemStorage().getItemCount(Items.ENDER_EYE);
+                boolean eyeDropped = mod.getEntityTracker().itemDropped(Items.ENDER_EYE);
+                if (currentEyes < MINIMUM_EYES && eyeDropped) {
                     setDebugState("Picking up dropped eye");
                     return new PickupDroppedItemTask(Items.ENDER_EYE, MINIMUM_EYES);
                 }
@@ -51,13 +53,29 @@ public class GoToStrongholdPortalTask extends Task {
             }
         }
 
-        if (mod.getPlayer().getPos().distanceTo(WorldHelper.toVec3d(_strongholdCoordinates)) < 10 && !mod.getBlockScanner().anyFound(Blocks.END_PORTAL_FRAME)) {
+        //#if MC >= 12111
+        double distance = mod.getPlayer().getEntityPos().distanceTo(WorldHelper.toVec3d(_strongholdCoordinates));
+        boolean portalFrameFound = mod.getBlockScanner().anyFound(Blocks.END_PORTAL_FRAME);
+        if (distance < 10 && !portalFrameFound) {
             mod.log("Something went wrong whilst triangulating the stronghold... either the action got disrupted or the second eye went to a different stronghold");
             mod.log("We will try to triangulate again now...");
             _strongholdCoordinates = null;
             _locateCoordsTask = new LocateStrongholdCoordinatesTask(_targetEyes);
             return null;
         }
+        //#else
+        //$$ double distance = mod.getPlayer().getPos().distanceTo(WorldHelper.toVec3d(_strongholdCoordinates));
+        //$$ boolean portalFrameFound = mod.getBlockScanner().anyFound(Blocks.END_PORTAL_FRAME);
+        //$$ if (distance < 10 && !portalFrameFound) {
+        //$$     Debug.logWarning("Resetting stronghold: distance=" + distance + ", portalFrameFound=" + portalFrameFound);
+        //$$     Debug.logWarning("Near stronghold coordinates but no portal frame found. Resetting stronghold coordinates.");
+        //$$     mod.log("Something went wrong whilst triangulating the stronghold... either the action got disrupted or the second eye went to a different stronghold");
+        //$$     mod.log("We will try to triangulate again now...");
+        //$$     _strongholdCoordinates = null;
+        //$$     _locateCoordsTask = new LocateStrongholdCoordinatesTask(_targetEyes);
+        //$$     return null;
+        //$$ }
+        //#endif
         // Search stone brick chunks, but while we're wandering, go to the nether
         setDebugState("Searching for Stronghold...");
         /*return new SearchChunkForBlockTask(Blocks.STONE_BRICKS) {

@@ -1,7 +1,6 @@
 package adris.altoclef.chains;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.mixins.DeathScreenAccessor;
 import adris.altoclef.multiversion.ConnectScreenVer;
 import adris.altoclef.multiversion.entity.PlayerVer;
@@ -64,7 +63,6 @@ public class DeathMenuChain extends TaskChain {
         // This might fix Weird fail to respawn that happened only once
         if (prevScreen == DeathScreen.class) {
             if (deathRetryTimer.elapsed()) {
-                Debug.logMessage("(RESPAWN RETRY WEIRD FIX...)");
                 deathRetryTimer.reset();
                 prevScreen = null;
             }
@@ -83,7 +81,6 @@ public class DeathMenuChain extends TaskChain {
                 waitOnDeathScreenBeforeRespawnTimer.reset();
                 if (shouldAutoRespawn()) {
                     deathCount++;
-                    Debug.logMessage("RESPAWNING... (this is death #" + deathCount + ")");
                     assert MinecraftClient.getInstance().player != null;
                     Text screenMessage = ((DeathScreenAccessor) screen).getMessage();
                     String deathMessage = screenMessage != null ? screenMessage.getString() : "Unknown"; //"(not implemented yet)"; //screen.children().toString();
@@ -115,7 +112,6 @@ public class DeathMenuChain extends TaskChain {
             }
             if (screen instanceof DisconnectedScreen) {
                 if (shouldAutoReconnect()) {
-                    Debug.logMessage("RECONNECTING: Going to Multiplayer Screen");
                     reconnecting = true;
                     MinecraftClient.getInstance().setScreen(new MultiplayerScreen(new TitleScreen()));
                 } else {
@@ -124,11 +120,9 @@ public class DeathMenuChain extends TaskChain {
                 }
             } else if (screen instanceof MultiplayerScreen && reconnecting && reconnectTimer.elapsed()) {
                 reconnectTimer.reset();
-                Debug.logMessage("RECONNECTING: Going ");
                 reconnecting = false;
 
                 if (prevServerEntry == null) {
-                    Debug.logWarning("Failed to re-connect to server, no server entry cached.");
                 } else {
                     MinecraftClient client = MinecraftClient.getInstance();
                     ConnectScreenVer.connect(screen, client, ServerAddress.parse(prevServerEntry.address), prevServerEntry, false);

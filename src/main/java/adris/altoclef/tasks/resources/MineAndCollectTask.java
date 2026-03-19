@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.multiversion.ToolMaterialVer;
 import adris.altoclef.tasks.AbstractDoToClosestObjectTask;
@@ -23,7 +22,6 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.MiningToolItem;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -134,15 +132,16 @@ public class MineAndCollectTask extends ResourceTask {
                 if (item.getDefaultStack().isSuitableFor(mod.getWorld().getBlockState(_subtask.miningPos()))) {
                     // Our cursor stack would help us mine our current block
                     Item currentlyEquipped = StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem();
-                    if (item instanceof MiningToolItem) {
-                        if (currentlyEquipped instanceof MiningToolItem currentPick) {
-                            MiningToolItem swapPick = (MiningToolItem) item;
-                            if (ToolMaterialVer.getMiningLevel(swapPick) > ToolMaterialVer.getMiningLevel(currentPick)) {
-                                // We can equip a better pickaxe.
+                    // Check if the item is a tool using ToolMaterialVer
+                    if (ToolMaterialVer.isTool(item)) {
+                        if (ToolMaterialVer.isTool(currentlyEquipped)) {
+                            // Both are tools, compare mining levels
+                            if (ToolMaterialVer.getMiningLevel(item) > ToolMaterialVer.getMiningLevel(currentlyEquipped)) {
+                                // We can equip a better tool.
                                 mod.getSlotHandler().forceEquipSlot(CursorSlot.SLOT);
                             }
                         } else {
-                            // We're not equipped with a pickaxe...
+                            // We're not equipped with a tool...
                             mod.getSlotHandler().forceEquipSlot(CursorSlot.SLOT);
                         }
                     }
@@ -173,7 +172,11 @@ public class MineAndCollectTask extends ResourceTask {
                 return WorldHelper.toVec3d(b);
             }
             if (obj instanceof ItemEntity item) {
-                return item.getPos();
+                //#if MC >= 12111
+                return item.getEntityPos();
+                //#else
+                //$$ return item.getPos();
+                //#endif
             }
             throw new UnsupportedOperationException("Shouldn't try to get the position of object " + obj + " of type " + (obj != null ? obj.getClass().toString() : "(null object)"));
         }
@@ -218,6 +221,9 @@ public class MineAndCollectTask extends ResourceTask {
                 return WorldHelper.canBreak(check);
             }, blocks);
 
+            if (closestBlock.isEmpty()) {
+            }
+
             return new Pair<>(
                     closestBlock.map(blockPos -> BlockPosVer.getSquaredDistance(blockPos, pos)).orElse(Double.POSITIVE_INFINITY),
                     closestBlock
@@ -226,7 +232,11 @@ public class MineAndCollectTask extends ResourceTask {
 
         @Override
         protected Vec3d getOriginPos(AltoClef mod) {
-            return mod.getPlayer().getPos();
+            //#if MC >= 12111
+            return mod.getPlayer().getEntityPos();
+            //#else
+            //$$ return mod.getPlayer().getPos();
+            //#endif
         }
 
         @Override
@@ -238,7 +248,6 @@ public class MineAndCollectTask extends ResourceTask {
             }
             if (miningPos != null && !progressChecker.check(mod)) {
                 mod.getClientBaritone().getPathingBehavior().forceCancel();
-                Debug.logMessage("Failed to mine block. Suggesting it may be unreachable.");
                 mod.getBlockScanner().requestBlockUnreachable(miningPos, 2);
                 blacklist.add(miningPos);
                 miningPos = null;

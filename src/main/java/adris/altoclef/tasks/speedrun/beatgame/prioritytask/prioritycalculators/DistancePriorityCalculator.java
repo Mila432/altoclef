@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.beatgame.prioritytask.prioritycalculators;
 
+
 public abstract class DistancePriorityCalculator {
 
     public final int minCount;

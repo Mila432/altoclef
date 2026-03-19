@@ -1,10 +1,10 @@
 package adris.altoclef.trackers;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.ChunkLoadEvent;
 import adris.altoclef.eventbus.events.ChunkUnloadEvent;
+import adris.altoclef.multiversion.world.WorldVer;
 import adris.altoclef.util.helpers.WorldHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -73,7 +73,11 @@ public class SimpleChunkTracker {
     public boolean scanChunk(ChunkPos chunk, Predicate<BlockPos> onBlockStop) {
         if (!isChunkLoaded(chunk)) return false;
         int bottomY = mod.getWorld().getBottomY();
-        int topY = mod.getWorld().getTopY();
+        //#if MC >= 12111
+        int topY = mod.getWorld().getTopYInclusive() + 1;
+        //#else
+        //$$ int topY = WorldVer.getTopY(mod.getWorld());
+        //#endif
 
         //Debug.logInternal("SCANNED CHUNK " + chunk.toString());
         for (int xx = chunk.getStartX(); xx <= chunk.getEndX(); ++xx) {

@@ -39,6 +39,7 @@ public class GetOutOfWaterTask extends CustomBaritoneGoalTask{
             }
         }
         boolean hasAirAbove = mod.getWorld().getBlockState(mod.getPlayer().getBlockPos().up(2)).getBlock().equals(Blocks.AIR);
+        
 
         if (hasAirAbove && hasBlockBelow && StorageHelper.getNumberOfThrowawayBlocks(mod) > 0) {
             mod.getInputControls().tryPress(Input.JUMP);

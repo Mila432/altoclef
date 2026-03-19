@@ -33,7 +33,12 @@ public class GetCloseToBlockTask extends Task {
         // We have a strictly decreasing range, which means we will eventualy get
         // as close as we can.
         if (inRange()) {
-            _currentRange = getCurrentDistance() - 1;
+            int oldRange = _currentRange;
+            int currentDistance = getCurrentDistance();
+            _currentRange = currentDistance - 1;
+            if (oldRange >= 0 && _currentRange < 0) {
+            } else if (oldRange == Integer.MAX_VALUE) {
+            }
         }
         return new GetWithinRangeOfBlockTask(_toApproach, _currentRange);
     }

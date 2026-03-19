@@ -31,8 +31,14 @@ public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
     protected boolean isEqual(Task other) {
         if (other instanceof DodgeProjectilesTask task) {
             //if (task._mob.getPos().squaredDistanceTo(_mob.getPos()) > 0.5) return false;
-            if (Math.abs(task._distanceHorizontal - _distanceHorizontal) > 1) return false;
-            if (Math.abs(task._distanceVertical - _distanceVertical) > 1) return false;
+            double horizDiff = Math.abs(task._distanceHorizontal - _distanceHorizontal);
+            double vertDiff = Math.abs(task._distanceVertical - _distanceVertical);
+            if (horizDiff > 1) {
+                return false;
+            }
+            if (vertDiff > 1) {
+                return false;
+            }
             return true;
         }
         return false;

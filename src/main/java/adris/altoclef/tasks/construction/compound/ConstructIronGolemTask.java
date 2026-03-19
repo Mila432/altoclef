@@ -58,6 +58,7 @@ public class ConstructIronGolemTask extends Task {
             }
             if (position == null) {
                 position = mod.getPlayer().getBlockPos();
+            } else {
             }
         }
         if (!WorldHelper.isBlock(position, Blocks.IRON_BLOCK)) {
@@ -125,7 +126,14 @@ public class ConstructIronGolemTask extends Task {
     public boolean isFinished() {
         if (position == null) return false;
         Optional<Entity> closestIronGolem = AltoClef.getInstance().getEntityTracker().getClosestEntity(new Vec3d(position.getX(), position.getY(), position.getZ()), IronGolemEntity.class);
-        return closestIronGolem.isPresent() && closestIronGolem.get().getBlockPos().isWithinDistance(position, 2) && canBeFinished;
+        boolean golemPresent = closestIronGolem.isPresent();
+        boolean withinDistance = golemPresent && closestIronGolem.get().getBlockPos().isWithinDistance(position, 2);
+        if (golemPresent && withinDistance && canBeFinished) {
+            return true;
+        }
+        if (golemPresent && !withinDistance) {
+        }
+        return false;
     }
 
     @Override
@@ -150,13 +158,16 @@ public class ConstructIronGolemTask extends Task {
     }
 
     private ItemTarget[] golemMaterials(AltoClef mod) {
-        if (position == null || mod.getWorld().getBlockState(position.up(2)).getBlock() != Blocks.CARVED_PUMPKIN)
+        boolean pumpkinNeeded = (position == null || mod.getWorld().getBlockState(position.up(2)).getBlock() != Blocks.CARVED_PUMPKIN);
+        if (pumpkinNeeded) {
             return new ItemTarget[]{
                     new ItemTarget(Items.IRON_BLOCK, ironBlocksNeeded(mod)),
                     new ItemTarget(Items.CARVED_PUMPKIN, 1)
             };
-        else return new ItemTarget[]{
-                new ItemTarget(Items.IRON_BLOCK, ironBlocksNeeded(mod))
-        };
+        } else {
+            return new ItemTarget[]{
+                    new ItemTarget(Items.IRON_BLOCK, ironBlocksNeeded(mod))
+            };
+        }
     }
 }

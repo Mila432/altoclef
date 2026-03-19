@@ -1,7 +1,6 @@
 package adris.altoclef.commands;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 
@@ -18,7 +17,6 @@ public class UnPauseCommand extends Command {
             mod.log("Bot isn't paused");
         } else {
             if (mod.getStoredTask() == null) {
-                Debug.logError("Stored task is null!");
             } else {
                 mod.runUserTask(mod.getStoredTask());
                 mod.getTaskRunner().enable();

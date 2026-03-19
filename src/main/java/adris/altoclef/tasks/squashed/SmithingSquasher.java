@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.squashed;
 
-
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.container.UpgradeInSmithingTableTask;
@@ -66,10 +65,12 @@ public class SmithingSquasher extends TypeSquasher<UpgradeInSmithingTableTask> {
             if (inSmithingTable) {
                 for (int i = 0; i < resultingTargets.size(); ++i) {
                     ItemTarget target = resultingTargets.get(i);
-                    int smithingTableCount = getItemsInSlot(mod, SmithingTableSlot.INPUT_SLOT_MATERIALS, target)
-                            + getItemsInSlot(mod, SmithingTableSlot.INPUT_SLOT_TOOL, target)
-                            + getItemsInSlot(mod, SmithingTableSlot.OUTPUT_SLOT, target);
-                    resultingTargets.set(i, new ItemTarget(target, target.getTargetCount() - smithingTableCount));
+                    int materialsCount = getItemsInSlot(mod, SmithingTableSlot.INPUT_SLOT_MATERIALS, target);
+                    int toolsCount = getItemsInSlot(mod, SmithingTableSlot.INPUT_SLOT_TOOL, target);
+                    int outputCount = getItemsInSlot(mod, SmithingTableSlot.OUTPUT_SLOT, target);
+                    int smithingTableCount = materialsCount + toolsCount + outputCount;
+                    int adjustedCount = target.getTargetCount() - smithingTableCount;
+                    resultingTargets.set(i, new ItemTarget(target, adjustedCount));
                 }
             }
             return new CataloguedResourceTask(resultingTargets.toArray(ItemTarget[]::new));

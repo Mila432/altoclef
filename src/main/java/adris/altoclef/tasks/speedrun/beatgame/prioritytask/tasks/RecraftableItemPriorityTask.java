@@ -18,8 +18,12 @@ public class RecraftableItemPriorityTask extends CraftItemPriorityTask{
 
     @Override
     protected double getPriority(AltoClef mod) {
-        if (isSatisfied()) return recraftPriority;
-
-        return super.getPriority(mod);
+        boolean satisfied = isSatisfied();
+        if (satisfied) {
+            return recraftPriority;
+        }
+        
+        double parentPriority = super.getPriority(mod);
+        return parentPriority;
     }
 }

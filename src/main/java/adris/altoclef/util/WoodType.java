@@ -1,5 +1,6 @@
 package adris.altoclef.util;
 
+
 public enum WoodType {
     ACACIA,
     BIRCH,

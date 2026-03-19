@@ -1,92 +1,123 @@
 package adris.altoclef.util;
 
+import adris.altoclef.util.helpers.ItemHelper;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.Item;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.world.World;
 import adris.altoclef.multiversion.RecipeVer;
 import adris.altoclef.multiversion.recipemanager.RecipeManagerWrapper;
 import adris.altoclef.multiversion.recipemanager.WrappedRecipeEntry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.recipe.Ingredient;
-import net.minecraft.recipe.Recipe;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * For crafting table/inventory recipe book crafting, we need to figure out identifiers given a recipe.
- */
 public class JankCraftingRecipeMapping {
-    private static final HashMap<Item, List<WrappedRecipeEntry>> recipeMapping = new HashMap<>();
 
-    /**
-     * Reloads the recipe mapping.
-     */
+    private static final Map<Item, List<WrappedRecipeEntry>> recipeMapping = new HashMap<>();
+    private static boolean cached = false;
+
     private static void reloadRecipeMapping() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        if (cached) {
+            return;
+        }
+        recipeMapping.clear();
+        if (MinecraftClient.getInstance().player != null) {
+            World world = 
+                //#if MC >= 12111
+                MinecraftClient.getInstance().player.getEntityWorld();
+                //#else
+                //$$ MinecraftClient.getInstance().player.getWorld();
+                //#endif
+            RecipeManagerWrapper recipes = null;
+            if (MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.networkHandler != null) {
+                recipes = RecipeManagerWrapper.of(MinecraftClient.getInstance().player.networkHandler.getRecipeManager());
+            }
 
-        // Check if the network handler is available
-        if (client.getNetworkHandler() != null) {
-            RecipeManagerWrapper recipes = RecipeManagerWrapper.of(client.getNetworkHandler().getRecipeManager());
-            ClientWorld world = client.world;
-
-            // Check if the recipe manager is available
             if (recipes != null) {
                 for (WrappedRecipeEntry recipe : recipes.values()) {
                     assert world != null;
                     Recipe<?> value = recipe.value();
-                    Item output = RecipeVer.getOutput(value,world).getItem();
+                    //#if MC >= 12111
+                    if (!(value instanceof net.minecraft.recipe.CraftingRecipe)) {
+                        continue;
+                    }
+                    //#endif
+                    Item output = RecipeVer.getOutput(value, world).getItem();
+                    if (output == null) {
+                        continue;
+                    }
                     recipeMapping.computeIfAbsent(output, k -> new ArrayList<>()).add(recipe);
                 }
+                cached = true;
+            } else {
             }
+        } else {
         }
     }
 
-    /**
-     * Retrieves the mapped recipe for a given output item from the Minecraft crafting recipe.
-     *
-     * @param recipe The crafting recipe to check against.
-     * @param output The output item of the recipe.
-     * @return An Optional containing the mapped recipe entry if found, or an empty Optional if not found.
-     */
     public static Optional<WrappedRecipeEntry> getMinecraftMappedRecipe(CraftingRecipe recipe, Item output) {
         reloadRecipeMapping();
-        // Check if the output item is present in the recipe mapping
+
         if (recipeMapping.containsKey(output)) {
-            // Iterate through all the recipes mapped to the output item
             for (WrappedRecipeEntry checkRecipe : recipeMapping.get(output)) {
-                // Create a list of item targets to satisfy
                 List<ItemTarget> toSatisfy = Arrays.stream(recipe.getSlots())
                         .filter(itemTarget -> itemTarget != null && !itemTarget.isEmpty())
                         .collect(Collectors.toList());
-                // Check if the recipe has ingredients
-                if (!checkRecipe.value().getIngredients().isEmpty()) {
-                    // Iterate through the ingredients of the recipe
-                    for (Ingredient ingredient : checkRecipe.value().getIngredients()) {
-                        // Skip empty ingredients
+
+                //#if MC >= 12111
+                List<Ingredient> ingredients;
+                if (checkRecipe.value() instanceof net.minecraft.recipe.CraftingRecipe craftingRecipe) {
+                    ingredients = craftingRecipe.getIngredientPlacement().getIngredients();
+                } else if (checkRecipe.value() instanceof net.minecraft.recipe.AbstractCookingRecipe cookingRecipe) {
+                    ingredients = cookingRecipe.getIngredientPlacement().getIngredients();
+                } else if (checkRecipe.value() instanceof net.minecraft.recipe.SingleStackRecipe singleStackRecipe) {
+                    ingredients = singleStackRecipe.getIngredientPlacement().getIngredients();
+                } else {
+                    ingredients = new ArrayList<>();
+                }
+                //#else
+                //$$ List<Ingredient> ingredients = checkRecipe.value().getIngredients();
+                //#endif
+
+                if (!ingredients.isEmpty()) {
+                    for (Ingredient ingredient : ingredients) {
                         if (ingredient.isEmpty()) {
                             continue;
                         }
-                        // Iterate through the items to satisfy
+
                         outer:
                         for (int i = 0; i < toSatisfy.size(); ++i) {
                             ItemTarget target = toSatisfy.get(i);
-                            // Check if any of the ingredient's matching stacks matches the item target
-                            for (ItemStack stack : ingredient.getMatchingStacks()) {
-                                if (target.matches(stack.getItem())) {
-                                    toSatisfy.remove(i);
-                                    break outer;
-                                }
-                            }
+
+                            //#if MC >= 12111
+                            for (net.minecraft.registry.entry.RegistryEntry<Item> itemEntry : ingredient.getMatchingItems().toList()) {
+                                 if (target.matches(itemEntry.value())) {
+                                     toSatisfy.remove(i);
+                                     break outer;
+                                 }
+                             }
+                            //#else
+                            //$$ for (net.minecraft.item.ItemStack stack : ingredient.getMatchingStacks()) {
+                            //$$     if (target.matches(stack.getItem())) {
+                            //$$         toSatisfy.remove(i);
+                            //$$         break outer;
+                            //$$     }
+                            //$$ }
+                            //#endif
                         }
                     }
                 }
-                // Check if all the item targets have been satisfied
+
                 if (toSatisfy.isEmpty()) {
                     return Optional.of(checkRecipe);
+                } else {
                 }
             }
+        } else {
         }
+
         return Optional.empty();
     }
 }

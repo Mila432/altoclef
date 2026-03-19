@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.Subscription;
 import adris.altoclef.eventbus.events.ChunkLoadEvent;
@@ -106,7 +105,6 @@ abstract class ChunkSearchTask extends Task {
 
         if (closest == null) {
             _finished = true;
-            Debug.logWarning("Failed to find any chunks to go to. If we finish, that means we scanned all possible chunks.");
             //Debug.logMessage("wtf??????: " + _finished);
             return null;
         }
@@ -188,6 +186,7 @@ abstract class ChunkSearchTask extends Task {
                 searchChunkOrQueueSearch(mod, new ChunkPos(pos.x - 1, pos.z));
                 searchChunkOrQueueSearch(mod, new ChunkPos(pos.x, pos.z + 1));
                 searchChunkOrQueueSearch(mod, new ChunkPos(pos.x, pos.z - 1));
+            } else {
             }
             return true;
         }

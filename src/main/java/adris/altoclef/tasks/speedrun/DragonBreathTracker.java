@@ -54,6 +54,8 @@ public class DragonBreathTracker {
 
         @Override
         protected Goal newGoal(AltoClef mod) {
+            if (breathBlocks.isEmpty()) {
+            }
             return new GoalRunAway(10, breathBlocks.toArray(BlockPos[]::new));
         }
 

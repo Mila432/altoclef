@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.construction;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.multiversion.versionedfields.Items;
 import adris.altoclef.tasks.movement.GetToBlockTask;
@@ -107,7 +106,8 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         if (autoCollectStructureBlocks) {
             if (materialTask != null && materialTask.isActive() && !materialTask.isFinished()) {
                 setDebugState("No structure items, collecting cobblestone + dirt as default.");
-                if (getMaterialCount(mod) < PREFERRED_MATERIALS) {
+                int currentCount = getMaterialCount(mod);
+                if (currentCount < PREFERRED_MATERIALS) {
                     return materialTask;
                 } else {
                     materialTask = null;
@@ -115,7 +115,8 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             }
 
             //Item[] items = Util.toArray(Item.class, mod.getClientBaritoneSettings().acceptableThrowawayItems.value);
-            if (getMaterialCount(mod) < MIN_MATERIALS) {
+            int materialCount = getMaterialCount(mod);
+            if (materialCount < MIN_MATERIALS) {
                 // TODO: Mine items, extract their resource key somehow.
                 materialTask = getMaterialTask(PREFERRED_MATERIALS);
                 progressChecker.reset();
@@ -127,11 +128,10 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         // Check if we're approaching our point. If we fail, wander for a bit.
         if (!progressChecker.check(mod)) {
             failCount++;
-            if (!tryingAlternativeWay()) {
-                Debug.logMessage("Failed to place, wandering timeout.");
+            boolean isAlternative = tryingAlternativeWay();
+            if (!isAlternative) {
                 return wanderTask;
             } else {
-                Debug.logMessage("Trying alternative way of placing block...");
             }
         }
 
@@ -144,7 +144,6 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             setDebugState("Letting baritone place a block.");
             // Perform baritone placement
             if (!mod.getClientBaritone().getBuilderProcess().isActive()) {
-                Debug.logInternal("Run Structure Build");
                 ISchematic schematic = new PlaceStructureSchematic(mod);
                 mod.getClientBaritone().getBuilderProcess().build("structure", schematic, target);
             }
@@ -209,8 +208,13 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                             return possible;
                         }
                     }
+                    
+                    // NEW FALLBACK: If we need a throwaway and Baritone has available blocks, 
+                    // just use the first one rather than hardcoding Cobblestone and failing.
+                    if (useThrowaways) {
+                        return available.get(0);
+                    }
                 }
-                Debug.logInternal("Failed to find throwaway block");
                 // No throwaways available!!
                 return new BlockOptionalMeta(Blocks.COBBLESTONE).getAnyBlockState();
             }

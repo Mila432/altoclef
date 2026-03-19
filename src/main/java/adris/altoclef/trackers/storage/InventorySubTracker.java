@@ -110,9 +110,16 @@ public class InventorySubTracker extends Tracker {
         if (includeCursor) {
             result.add(StorageHelper.getItemStackInCursorSlot());
         }
-        result.addAll(inv.main);
-        result.addAll(inv.armor);
-        result.addAll(inv.offHand);
+        // Use getStack() method for all slots - works across versions
+        for (int i = 0; i < 36; i++) {
+            result.add(inv.getStack(i));
+        }
+        // Armor slots (indices 36-39)
+        for (int i = 36; i < 40; i++) {
+            result.add(inv.getStack(i));
+        }
+        // Offhand slot (index 40)
+        result.add(inv.getStack(40));
         return result;
     }
 

@@ -82,7 +82,11 @@ public abstract class DoStuffInContainerTask extends Task {
 
         Optional<BlockPos> nearest;
 
-        Vec3d currentPos = mod.getPlayer().getPos();
+        //#if MC >= 12111
+        Vec3d currentPos = mod.getPlayer().getEntityPos();
+        //#else
+        //$$ Vec3d currentPos = mod.getPlayer().getPos();
+        //#endif
         BlockPos override = overrideContainerPosition(mod);
 
         if (override != null && mod.getBlockScanner().isBlockAtPosition(override, containerBlocks)) {

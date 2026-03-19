@@ -20,9 +20,20 @@ public class ItemSerializer extends StdSerializer<Object> {
 
     @Override
     public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        if (value == null) {
+            return;
+        }
+        
+        if (!(value instanceof List)) {
+            return;
+        }
+        
         List<Item> items = (List<Item>) value;
         gen.writeStartArray();
         for (Item item : items) {
+            if (item == null) {
+                continue;
+            }
             String key = ItemHelper.trimItemName(item.getTranslationKey());
             gen.writeString(key);
         }

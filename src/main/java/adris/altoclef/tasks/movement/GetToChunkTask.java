@@ -25,7 +25,8 @@ public class GetToChunkTask extends CustomBaritoneGoalTask {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof GetToChunkTask task) {
-            return task._pos.equals(_pos);
+            boolean result = task._pos.equals(_pos);
+            return result;
         }
         return false;
     }

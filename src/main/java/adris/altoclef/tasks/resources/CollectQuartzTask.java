@@ -28,12 +28,12 @@ public class CollectQuartzTask extends ResourceTask {
 
     @Override
     protected void onResourceStart(AltoClef mod) {
-
     }
 
     @Override
     protected Task onResourceTick(AltoClef mod) {
-        if (WorldHelper.getCurrentDimension() != Dimension.NETHER) {
+        Dimension currentDim = WorldHelper.getCurrentDimension();
+        if (currentDim != Dimension.NETHER) {
             setDebugState("Going to nether");
             return new DefaultGoToDimensionTask(Dimension.NETHER);
         }
@@ -44,7 +44,6 @@ public class CollectQuartzTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(AltoClef mod, Task interruptTask) {
-
     }
 
     @Override

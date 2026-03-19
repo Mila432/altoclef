@@ -44,7 +44,9 @@ public class CollectFoodPriorityCalculator extends ItemPriorityCalculator {
         double foodPotential = CollectFoodTask.calculateFoodPotential(mod);
 
         //prevents from going to the nether without any food
-        if (Double.isInfinite(distance) && foodPotential < foodUnits) return 0.1d;
+        if (Double.isInfinite(distance) && foodPotential < foodUnits) {
+            return 0.1d;
+        }
 
         Optional<BlockPos> hay = mod.getBlockScanner().getNearestBlock(Blocks.HAY_BLOCK);
         if ((hay.isPresent() && WorldHelper.inRangeXZ(hay.get(),mod.getPlayer().getBlockPos(),75))|| mod.getEntityTracker().itemDropped(Items.HAY_BLOCK)) {
@@ -123,8 +125,14 @@ public class CollectFoodPriorityCalculator extends ItemPriorityCalculator {
 
         for (CookableFoodTarget cookable : COOKABLE_FOODS) {
             if (!mod.getEntityTracker().entityFound(cookable.mobToKill)) continue;
-            Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), notBaby, cookable.mobToKill);
-            if (nearest.isEmpty()) continue; // ?? This crashed once?
+            //#if MC >= 12111
+            Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getEntityPos(), notBaby, cookable.mobToKill);
+            //#else
+            //$$ Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), notBaby, cookable.mobToKill);
+            //#endif
+            if (nearest.isEmpty()) {
+                continue;
+            }
             int hungerPerformance = cookable.getCookedUnits();
             double sqDistance = nearest.get().squaredDistanceTo(mod.getPlayer());
             double score = (double) 100 * hungerPerformance / (sqDistance);
@@ -158,15 +166,29 @@ public class CollectFoodPriorityCalculator extends ItemPriorityCalculator {
             if (!WorldHelper.canBreak(blockPos)) return false;
             return accept.test(blockPos);
         };
-        Optional<BlockPos> nearestBlock = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), acceptPlus, blockToCheck);
+        //#if MC >= 12111
+        Optional<BlockPos> nearestBlock = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getEntityPos(), acceptPlus, blockToCheck);
+        //#else
+        //$$ Optional<BlockPos> nearestBlock = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), acceptPlus, blockToCheck);
+        //#endif
 
-        if (nearestBlock.isPresent() && !nearestBlock.get().isWithinDistance(mod.getPlayer().getPos(), maxRange)) {
+        if (nearestBlock.isPresent() && !nearestBlock.get().isWithinDistance(
+                //#if MC >= 12111
+                mod.getPlayer().getEntityPos()
+                //#else
+                //$$ mod.getPlayer().getPos()
+                //#endif
+                , maxRange)) {
             nearestBlock = Optional.empty();
         }
 
         Optional<ItemEntity> nearestDrop = Optional.empty();
         if (mod.getEntityTracker().itemDropped(itemToGrab)) {
-            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#if MC >= 12111
+            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getEntityPos(), itemToGrab);
+            //#else
+            //$$ nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#endif
         }
 
 
@@ -187,7 +209,11 @@ public class CollectFoodPriorityCalculator extends ItemPriorityCalculator {
     private double pickupTaskOrNull(AltoClef mod, Item itemToGrab, double maxRange) {
         Optional<ItemEntity> nearestDrop = Optional.empty();
         if (mod.getEntityTracker().itemDropped(itemToGrab)) {
-            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#if MC >= 12111
+            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getEntityPos(), itemToGrab);
+            //#else
+            //$$ nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#endif
         }
         if (nearestDrop.isPresent()) {
             if (nearestDrop.get().isInRange(mod.getPlayer(), maxRange)) {
@@ -208,11 +234,12 @@ public class CollectFoodPriorityCalculator extends ItemPriorityCalculator {
                             } else if (itemToGrab.equals(Items.WHEAT)) {
                                 hunger += ItemVer.getFoodComponent(Items.BREAD).getHunger() / 3d;
                             } else {
-                                mod.log("unknown food item: " + itemToGrab);
                             }
                             int groundCost = (int) (hunger * nearestDrop.get().getStack().getCount());
 
-                            if (inventoryCost > groundCost) return Double.NEGATIVE_INFINITY;
+                            if (inventoryCost > groundCost) {
+                                return Double.NEGATIVE_INFINITY;
+                            }
                         }
                     }
                 }

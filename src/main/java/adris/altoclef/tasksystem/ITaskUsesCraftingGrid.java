@@ -1,5 +1,6 @@
 package adris.altoclef.tasksystem;
 
+
 /**
  * Some tasks (mainly tasks that open containers) will break if they don't require
  * that the 2x2 crafting grid is empty. Tasks which implement this interface

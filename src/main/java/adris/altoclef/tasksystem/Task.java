@@ -1,6 +1,5 @@
 package adris.altoclef.tasksystem;
 
-import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 
 import java.util.function.Predicate;
@@ -38,7 +37,8 @@ public abstract class Task {
         // We have a sub task
         if (newSub != null) {
             if (!newSub.isEqual(sub)) {
-                if (canBeInterrupted(sub, newSub)) {
+                boolean canInterrupt = canBeInterrupted(sub, newSub);
+                if (canInterrupt) {
                     // Our sub task is new
                     if (sub != null) {
                         // Our previous sub must be interrupted.
@@ -174,11 +174,12 @@ public abstract class Task {
     private boolean canBeInterrupted(Task subTask, Task toInterruptWith) {
         if (subTask == null) return true;
         // Our task can declare that is FORCES itself to be active NOW.
-        return (subTask.thisOrChildSatisfies(task -> {
+        boolean result = (subTask.thisOrChildSatisfies(task -> {
             if (task instanceof ITaskCanForce canForce) {
                 return !canForce.shouldForce(toInterruptWith);
             }
             return true;
         }));
+        return result;
     }
 }

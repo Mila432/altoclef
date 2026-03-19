@@ -35,7 +35,9 @@ public class CraftingHelper {
     private static boolean canCraftItemNow(AltoClef mod, List<ItemStack> inventoryStacks, CraftingRecipe recipe, HashSet<Item> alreadyChecked) {
         Item recipeResult = mod.getCraftingRecipeTracker().getRecipeResult(recipe).getItem();
 
-        if (alreadyChecked.contains(recipeResult)) return false;
+        if (alreadyChecked.contains(recipeResult)) {
+            return false;
+        }
         alreadyChecked.add(recipeResult);
 
         ItemTarget[] targets = recipe.getSlots();

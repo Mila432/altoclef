@@ -34,27 +34,31 @@ public enum ContainerType {
     }
 
     public static boolean screenHandlerMatches(ContainerType type, ScreenHandler handler) {
+        boolean result;
         switch (type) {
             case CHEST, ENDER_CHEST -> {
-                return handler instanceof GenericContainerScreenHandler;
+                result = handler instanceof GenericContainerScreenHandler;
             }
             case SHULKER -> {
-                return handler instanceof ShulkerBoxScreenHandler;
+                result = handler instanceof ShulkerBoxScreenHandler;
             }
             case FURNACE -> {
-                return handler instanceof AbstractFurnaceScreenHandler;
+                result = handler instanceof AbstractFurnaceScreenHandler;
             }
             case BREWING -> {
-                return handler instanceof BrewingStandScreenHandler;
+                result = handler instanceof BrewingStandScreenHandler;
             }
             case MISC -> {
-                return handler instanceof Generic3x3ContainerScreenHandler || handler instanceof GenericContainerScreenHandler;
+                result = handler instanceof Generic3x3ContainerScreenHandler || handler instanceof GenericContainerScreenHandler;
             }
             case EMPTY -> {
                 return false;
             }
             default -> throw new NotImplementedException("Missed this chest type: " + type);
         }
+        if (!result) {
+        }
+        return result;
     }
 
     public static boolean screenHandlerMatches(ContainerType type) {
@@ -62,29 +66,39 @@ public enum ContainerType {
             ScreenHandler h = MinecraftClient.getInstance().player.currentScreenHandler;
             if (h != null)
                 return screenHandlerMatches(type, h);
+            else
+        } else {
         }
         return false;
     }
 
     public static boolean screenHandlerMatchesAny() {
-        return screenHandlerMatches(CHEST) ||
-                screenHandlerMatches(SHULKER) ||
-                screenHandlerMatches(FURNACE);
+        boolean matchesChest = screenHandlerMatches(CHEST);
+        boolean matchesShulker = screenHandlerMatches(SHULKER);
+        boolean matchesFurnace = screenHandlerMatches(FURNACE);
+        boolean anyMatch = matchesChest || matchesShulker || matchesFurnace;
+        if (!anyMatch) {
+        }
+        return anyMatch;
     }
 
     public static boolean slotTypeMatches(ContainerType type, Slot slot) {
+        boolean result;
         switch (type) {
             case CHEST, ENDER_CHEST, SHULKER -> {
-                return slot instanceof ChestSlot;
+                result = slot instanceof ChestSlot;
             }
             case FURNACE -> {
-                return slot instanceof FurnaceSlot;
+                result = slot instanceof FurnaceSlot;
             }
             case BREWING -> throw new NotImplementedException("Brewing slots not implemented yet.");
             case MISC -> {
-                return true;
+                result = true;
             }
             default -> throw new NotImplementedException("Missed this chest type: " + type);
         }
+        if (!result) {
+        }
+        return result;
     }
 }

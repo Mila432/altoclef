@@ -1,6 +1,7 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
+import adris.altoclef.Debug; // Added import
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.multiversion.item.ItemVer;
 import adris.altoclef.tasks.container.SmeltInSmokerTask;
@@ -49,7 +50,9 @@ public class CollectMeatTask extends Task {
         if (count <= 0) return 0;
         for (CookableFoodTarget cookable : COOKABLE_FOODS) {
             if (food.getItem() == cookable.getRaw()) {
-                assert ItemVer.getFoodComponent(cookable.getCooked()) != null;
+                if (ItemVer.getFoodComponent(cookable.getCooked()) == null) {
+                    return 0;
+                }
                 return count * ItemVer.getFoodComponent(cookable.getCooked()).getHunger();
             }
         }
@@ -85,6 +88,8 @@ public class CollectMeatTask extends Task {
             setDebugState("Cooking...");
             return smeltTask;
         } else {
+            if (smeltTask != null && smeltTask.isFinished()) {
+            }
             smeltTask = null;
         }
         if (checkNewOptionsTimer.elapsed()) {
@@ -105,7 +110,6 @@ public class CollectMeatTask extends Task {
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
                 int rawCount = mod.getItemStorage().getItemCount(cookable.getRaw());
                 if (rawCount > 0) {
-                    //Debug.logMessage("STARTING COOK OF " + cookable.getRaw().getTranslationKey());
                     int toSmelt = rawCount + mod.getItemStorage().getItemCount(cookable.getCooked());
                     smeltTask = new SmeltInSmokerTask(new SmeltTarget(new ItemTarget(cookable.cookedFood, toSmelt), new ItemTarget(cookable.rawFood, rawCount)));
                     smeltTask.ignoreMaterials();
@@ -127,10 +131,17 @@ public class CollectMeatTask extends Task {
             double bestScore = 0;
             Entity bestEntity = null;
             Item bestRawFood = null;
+            CookableFoodTarget bestCookable = null;
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
                 if (!mod.getEntityTracker().entityFound(cookable.mobToKill)) continue;
-                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), cookable.mobToKill);
-                if (nearest.isEmpty()) continue; // ?? This crashed once?
+                //#if MC >= 12111
+                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getEntityPos(), cookable.mobToKill);
+                //#else
+                //$$ Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), cookable.mobToKill);
+                //#endif
+                if (nearest.isEmpty()) {
+                    continue; // ?? This crashed once?
+                }
                 int hungerPerformance = cookable.getCookedUnits();
                 double sqDistance = nearest.get().squaredDistanceTo(mod.getPlayer());
                 double score = (double) 100 * hungerPerformance / (sqDistance);
@@ -138,6 +149,7 @@ public class CollectMeatTask extends Task {
                     bestScore = score;
                     bestEntity = nearest.get();
                     bestRawFood = cookable.getRaw();
+                    bestCookable = cookable;
                 }
             }
             if (bestEntity != null) {
@@ -169,7 +181,11 @@ public class CollectMeatTask extends Task {
     private Task pickupTaskOrNull(AltoClef mod, Item itemToGrab, double maxRange) {
         Optional<ItemEntity> nearestDrop = Optional.empty();
         if (mod.getEntityTracker().itemDropped(itemToGrab)) {
-            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#if MC >= 12111
+            nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getEntityPos(), itemToGrab);
+            //#else
+            //$$ nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
+            //#endif
         }
         if (nearestDrop.isPresent()) {
             if (nearestDrop.get().isInRange(mod.getPlayer(), maxRange)) {
@@ -191,7 +207,10 @@ public class CollectMeatTask extends Task {
 
     @Override
     public boolean isFinished() {
-        return StorageHelper.calculateInventoryFoodScore() >= unitsNeeded && smeltTask == null;
+        boolean finished = StorageHelper.calculateInventoryFoodScore() >= unitsNeeded && smeltTask == null;
+        if (finished) {
+        }
+        return finished;
     }
 
     @Override
@@ -223,15 +242,23 @@ public class CollectMeatTask extends Task {
         }
 
         public Item getRaw() {
-            return Objects.requireNonNull(TaskCatalogue.getItemMatches(rawFood))[0];
+            Item[] matches = TaskCatalogue.getItemMatches(rawFood);
+            if (matches == null || matches.length == 0) {
+            }
+            return Objects.requireNonNull(matches)[0];
         }
 
         public Item getCooked() {
-            return Objects.requireNonNull(TaskCatalogue.getItemMatches(cookedFood))[0];
+            Item[] matches = TaskCatalogue.getItemMatches(cookedFood);
+            if (matches == null || matches.length == 0) {
+            }
+            return Objects.requireNonNull(matches)[0];
         }
 
         public int getCookedUnits() {
-            assert ItemVer.getFoodComponent(getCooked()) != null;
+            if (ItemVer.getFoodComponent(getCooked()) == null) {
+                return 0;
+            }
             return ItemVer.getFoodComponent(getCooked()).getHunger();
         }
     }

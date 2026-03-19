@@ -48,8 +48,11 @@ public class PreEquipItemChain extends SingleTaskChain {
         BlockStateInterface bsi = new BlockStateInterface(BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext());
         for (IMovement iMovement : path.movements()) {
             Movement movement = (Movement) iMovement;
-            if (movement.toBreak(bsi).stream().anyMatch(pos -> mod.getWorld().getBlockState(pos).getBlock().getHardness() > 0)
-                    || !movement.toPlace(bsi).isEmpty()) return;
+            boolean hasBreakable = movement.toBreak(bsi).stream().anyMatch(pos -> mod.getWorld().getBlockState(pos).getBlock().getHardness() > 0);
+            boolean hasPlaceable = !movement.toPlace(bsi).isEmpty();
+            if (hasBreakable || hasPlaceable) {
+                return;
+            }
         }
 
         // we are *probably* trying to kill sth, might as well equip sword

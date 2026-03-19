@@ -33,7 +33,6 @@ public class CollectBlockByOneTask extends ResourceTask {
 
     @Override
     protected void onResourceStart(AltoClef mod) {
-
     }
 
     @Override
@@ -43,13 +42,20 @@ public class CollectBlockByOneTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(AltoClef mod, Task interruptTask) {
-
     }
 
     @Override
     protected boolean isEqualResource(ResourceTask other) {
         if (other instanceof CollectBlockByOneTask task) {
-            return task.count == count && task.item.equals(item) && Arrays.stream(task.blocks).allMatch(block -> Arrays.stream(blocks).toList().contains(block));
+            boolean countEqual = task.count == count;
+            boolean itemEqual = task.item.equals(item);
+            boolean blocksEqual = Arrays.stream(task.blocks).allMatch(block -> Arrays.stream(blocks).toList().contains(block));
+            boolean result = countEqual && itemEqual && blocksEqual;
+            
+            if (!result) {
+            }
+            
+            return result;
         }
         return false;
     }

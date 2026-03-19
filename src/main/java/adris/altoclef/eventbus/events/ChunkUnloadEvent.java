@@ -6,6 +6,8 @@ public class ChunkUnloadEvent {
     public ChunkPos chunkPos;
 
     public ChunkUnloadEvent(ChunkPos chunkPos) {
+        if (chunkPos == null) {
+        }
         this.chunkPos = chunkPos;
     }
 }

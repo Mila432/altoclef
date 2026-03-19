@@ -2,7 +2,6 @@ package adris.altoclef.tasks.construction;
 
 import adris.altoclef.AltoClef;
 import adris.altoclef.BotBehaviour;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.trackers.BlockScanner;
 import adris.altoclef.tasks.InteractWithBlockTask;
@@ -44,6 +43,7 @@ public class PlaceObsidianBucketTask extends Task {
 
     private BlockPos _currentCastTarget;
     private BlockPos _currentDestroyTarget;
+    private boolean _frameBuilt = false;
 
     public PlaceObsidianBucketTask(BlockPos pos) {
         _pos = pos;
@@ -64,6 +64,7 @@ public class PlaceObsidianBucketTask extends Task {
 
         // Reset the progress checker
         _progressChecker.reset();
+        _frameBuilt = false;
 
         // Logging statements for debugging
         Debug.logInternal("Started onStart method");
@@ -126,7 +127,8 @@ public class PlaceObsidianBucketTask extends Task {
         // Make sure we have a lava bucket
         if (!mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
             // The only excuse is that we have lava at our position.
-            if (!mod.getBlockScanner().isBlockAtPosition(_pos, Blocks.LAVA)) {
+            boolean hasLavaAtPos = mod.getBlockScanner().isBlockAtPosition(_pos, Blocks.LAVA);
+            if (!hasLavaAtPos) {
                 _progressChecker.reset();
                 return TaskCatalogue.getItemTask(Items.LAVA_BUCKET, 1);
             }
@@ -161,16 +163,25 @@ public class PlaceObsidianBucketTask extends Task {
         }
 
         // Build the cast frame if not already built
-        if (_currentCastTarget != null && WorldHelper.isSolidBlock(_currentCastTarget)) {
-            // Current cast frame already built.
-            _currentCastTarget = null;
-        }
-        for (Vec3i castPosRelative : CAST_FRAME) {
-            BlockPos castPos = _pos.add(castPosRelative);
-            if (!WorldHelper.isSolidBlock(castPos)) {
-                _currentCastTarget = castPos;
-                Debug.logInternal("Building cast frame...");
+        if (!_frameBuilt) {
+            if (_currentCastTarget != null && WorldHelper.isSolidBlock(_currentCastTarget)) {
+                // Current cast frame already built.
+                _currentCastTarget = null;
+            }
+            boolean missingBlock = false;
+            for (Vec3i castPosRelative : CAST_FRAME) {
+                BlockPos castPos = _pos.add(castPosRelative);
+                if (!WorldHelper.isSolidBlock(castPos)) {
+                    _currentCastTarget = castPos;
+                    Debug.logInternal("Building cast frame...");
+                    missingBlock = true;
+                    break;
+                }
+            }
+            if (missingBlock) {
                 return null;
+            } else {
+                _frameBuilt = true;
             }
         }
 

@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.speedrun;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.entity.DoToClosestEntityTask;
 import adris.altoclef.tasks.entity.KillEntitiesTask;
@@ -68,6 +67,8 @@ public class WaitForDragonAndPearlTask extends Task {
     }
 
     public void setPerchState(boolean perching) {
+        if (dragonIsPerching != perching) {
+        }
         dragonIsPerching = perching;
     }
 
@@ -113,22 +114,34 @@ public class WaitForDragonAndPearlTask extends Task {
             return TaskCatalogue.getItemTask(Items.ENDER_PEARL, 1);
         }
 
+        if (targetToPearl == null) {
+            return null;
+        }
+
         int minHeight = targetToPearl.getY() + HEIGHT - 3;
 
         int deltaY = minHeight - mod.getPlayer().getBlockPos().getY();
-        if (StorageHelper.getBuildingMaterialCount() < Math.min(deltaY - 10, HEIGHT - 5) || buildingMaterialsTask.isActive() && !buildingMaterialsTask.isFinished()) {
+        int requiredMaterials = Math.min(deltaY - 10, HEIGHT - 5);
+        int currentMaterials = StorageHelper.getBuildingMaterialCount();
+        if (currentMaterials < requiredMaterials || buildingMaterialsTask.isActive() && !buildingMaterialsTask.isFinished()) {
             setDebugState("Collecting building materials...");
             return buildingMaterialsTask;
         }
 
         // Our trigger to throw is that the dragon starts perching. We can be an arbitrary distance and we'll still do it lol
         if (dragonIsPerching && canThrowPearl(mod)) {
-            Debug.logMessage("THROWING PEARL!!");
             return throwPearlTask;
+        }
+        if (dragonIsPerching && !canThrowPearl(mod)) {
         }
         if (mod.getPlayer().getBlockPos().getY() < minHeight) {
             if (mod.getEntityTracker().entityFound(entity ->
-                    mod.getPlayer().getPos().isInRange(entity.getPos(), 4), AreaEffectCloudEntity.class)) {
+                //#if MC >= 12111
+                mod.getPlayer().getEntityPos().isInRange(entity.getEntityPos(), 4)
+                //#else
+                //$$ mod.getPlayer().getPos().isInRange(entity.getPos(), 4)
+                //#endif
+                    , AreaEffectCloudEntity.class)) {
                 if (mod.getEntityTracker().getClosestEntity(EnderDragonEntity.class).isPresent() &&
                         !mod.getClientBaritone().getPathingBehavior().isPathing()) {
                     LookHelper.lookAt(mod, mod.getEntityTracker().getClosestEntity(EnderDragonEntity.class).get().getEyePos());
@@ -163,9 +176,14 @@ public class WaitForDragonAndPearlTask extends Task {
             setDebugState("We're high enough.");
             // If a fireball is too close, run UP
             Optional<Entity> dragonFireball = mod.getEntityTracker().getClosestEntity(DragonFireballEntity.class);
-            if (dragonFireball.isPresent() && dragonFireball.get().isInRange(mod.getPlayer(), DRAGON_FIREBALL_TOO_CLOSE_RANGE) && LookHelper.cleanLineOfSight(mod.getPlayer(), dragonFireball.get().getPos(), DRAGON_FIREBALL_TOO_CLOSE_RANGE)) {
+            if (dragonFireball.isPresent() && dragonFireball.get().isInRange(mod.getPlayer(), DRAGON_FIREBALL_TOO_CLOSE_RANGE) && LookHelper.cleanLineOfSight(mod.getPlayer(),
+                //#if MC >= 12111
+                dragonFireball.get().getEntityPos()
+                //#else
+                //$$ dragonFireball.get().getPos()
+                //#endif
+                    , DRAGON_FIREBALL_TOO_CLOSE_RANGE)) {
                 pillarUpFurther = new GetToYTask(mod.getPlayer().getBlockY() + 5);
-                Debug.logMessage("HOLDUP");
                 return pillarUpFurther;
             }
             if (mod.getEntityTracker().entityFound(EndCrystalEntity.class)) {
@@ -193,9 +211,20 @@ public class WaitForDragonAndPearlTask extends Task {
             }
             return null;
         }
-        if (!WorldHelper.inRangeXZ(mod.getPlayer(), targetToPearl, XZ_RADIUS_TOO_FAR) && mod.getPlayer().getPos().getY() < minHeight && !_hasPillar) {
+        if (!WorldHelper.inRangeXZ(mod.getPlayer(), targetToPearl, XZ_RADIUS_TOO_FAR) &&
+            //#if MC >= 12111
+            mod.getPlayer().getEntityPos().getY()
+            //#else
+            //$$ mod.getPlayer().getPos().getY()
+            //#endif
+            < minHeight && !_hasPillar) {
             if (mod.getEntityTracker().entityFound(entity ->
-                    mod.getPlayer().getPos().isInRange(entity.getPos(), 4), AreaEffectCloudEntity.class)) {
+                //#if MC >= 12111
+                mod.getPlayer().getEntityPos().isInRange(entity.getEntityPos(), 4)
+                //#else
+                //$$ mod.getPlayer().getPos().isInRange(entity.getPos(), 4)
+                //#endif
+                    , AreaEffectCloudEntity.class)) {
                 if (mod.getEntityTracker().getClosestEntity(EnderDragonEntity.class).isPresent() &&
                         !mod.getClientBaritone().getPathingBehavior().isPathing()) {
                     LookHelper.lookAt(mod, mod.getEntityTracker().getClosestEntity(EnderDragonEntity.class).get().getEyePos());
@@ -215,6 +244,10 @@ public class WaitForDragonAndPearlTask extends Task {
 
     // basically same as LookHelper.cleanLineOfSight but edited so it has a small distance toleration
     private boolean canThrowPearl(AltoClef mod) {
+        if (targetToPearl == null) {
+            return false;
+        }
+        
         Vec3d targetPosition = WorldHelper.toVec3d(targetToPearl.up());
 
         // Perform a raycast from the entity's camera position to the target position with the specified max range
@@ -224,7 +257,7 @@ public class WaitForDragonAndPearlTask extends Task {
             // No hit result, clear line of sight
             return true;
         } else {
-            return switch (hitResult.getType()) {
+            boolean canThrow = switch (hitResult.getType()) {
                 case MISS ->
                     // Missed the target, clear line of sight
                         true;
@@ -235,6 +268,7 @@ public class WaitForDragonAndPearlTask extends Task {
                     // Hit an entity, line of sight blocked
                         false;
             };
+            return canThrow;
         }
     }
 
@@ -243,7 +277,16 @@ public class WaitForDragonAndPearlTask extends Task {
             return false;
 
         boolean fireballTooClose = fireball.get().isInRange(mod.getPlayer(), DRAGON_FIREBALL_TOO_CLOSE_RANGE);
-        boolean fireballInSight = LookHelper.cleanLineOfSight(mod.getPlayer(), fireball.get().getPos(), DRAGON_FIREBALL_TOO_CLOSE_RANGE);
+        boolean fireballInSight = LookHelper.cleanLineOfSight(mod.getPlayer(),
+            //#if MC >= 12111
+            fireball.get().getEntityPos()
+            //#else
+            //$$ fireball.get().getPos()
+            //#endif
+            , DRAGON_FIREBALL_TOO_CLOSE_RANGE);
+
+        if (fireballTooClose && fireballInSight) {
+        }
 
         return fireballTooClose && fireballInSight;
     }

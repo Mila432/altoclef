@@ -47,13 +47,20 @@ public class DoToClosestEntityTask extends AbstractDoToClosestObjectTask<Entity>
 
     @Override
     protected Vec3d getPos(AltoClef mod, Entity obj) {
-        return obj.getPos();
+        //#if MC >= 12111
+        return obj.getEntityPos();
+        //#else
+        //$$ return obj.getPos();
+        //#endif
     }
 
     @Override
     protected Optional<Entity> getClosestTo(AltoClef mod, Vec3d pos) {
-        if (!mod.getEntityTracker().entityFound(targetEntities)) return Optional.empty();
-        return mod.getEntityTracker().getClosestEntity(pos, shouldInteractWith, targetEntities);
+        if (!mod.getEntityTracker().entityFound(targetEntities)) {
+            return Optional.empty();
+        }
+        Optional<Entity> closest = mod.getEntityTracker().getClosestEntity(pos, shouldInteractWith, targetEntities);
+        return closest;
     }
 
     @Override
@@ -61,7 +68,11 @@ public class DoToClosestEntityTask extends AbstractDoToClosestObjectTask<Entity>
         if (getOriginPos != null) {
             return getOriginPos.get();
         }
-        return mod.getPlayer().getPos();
+        //#if MC >= 12111
+        return mod.getPlayer().getEntityPos();
+        //#else
+        //$$ return mod.getPlayer().getPos();
+        //#endif
     }
 
     @Override
@@ -71,7 +82,11 @@ public class DoToClosestEntityTask extends AbstractDoToClosestObjectTask<Entity>
 
     @Override
     protected boolean isValid(AltoClef mod, Entity obj) {
-        return obj.isAlive() && mod.getEntityTracker().isEntityReachable(obj);
+        boolean alive = obj.isAlive();
+        boolean reachable = mod.getEntityTracker().isEntityReachable(obj);
+        if (!alive || !reachable) {
+        }
+        return alive && reachable;
     }
 
     @Override

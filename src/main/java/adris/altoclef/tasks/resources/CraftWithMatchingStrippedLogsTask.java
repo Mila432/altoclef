@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.resources;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasksystem.Task;
@@ -33,7 +32,6 @@ public class CraftWithMatchingStrippedLogsTask extends CraftWithMatchingMaterial
                 return TaskCatalogue.getItemTask(strippedLogToGet, 1);//new CraftInInventoryTask(new ItemTarget(plankToGet, 1), CraftingRecipe.newShapedRecipe("planks", new ItemTarget[]{new ItemTarget(log, 1), empty, empty, empty}, 4), false, true);
             }
         }
-        Debug.logError("CraftWithMatchingStrippedLogs: Should never happen!");
         return null;
     }
 

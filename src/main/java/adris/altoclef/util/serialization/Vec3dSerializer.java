@@ -8,6 +8,13 @@ import java.util.Collection;
 public class Vec3dSerializer extends AbstractVectorSerializer<Vec3d> {
     @Override
     protected Collection<String> getParts(Vec3d value) {
+        if (value == null) {
+        } else {
+            if (Double.isNaN(value.getX()) || Double.isNaN(value.getY()) || Double.isNaN(value.getZ())) {
+            }
+            if (Double.isInfinite(value.getX()) || Double.isInfinite(value.getY()) || Double.isInfinite(value.getZ())) {
+            }
+        }
         return Arrays.asList("" + value.getX(), "" + value.getY(), "" + value.getZ());
     }
 }

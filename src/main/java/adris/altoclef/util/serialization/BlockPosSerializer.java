@@ -8,6 +8,8 @@ import java.util.Collection;
 public class BlockPosSerializer extends AbstractVectorSerializer<BlockPos> {
     @Override
     protected Collection<String> getParts(BlockPos value) {
+        if (value == null) {
+        }
         return Arrays.asList("" + value.getX(), "" + value.getY(), "" + value.getZ());
     }
 }

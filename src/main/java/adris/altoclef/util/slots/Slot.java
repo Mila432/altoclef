@@ -1,6 +1,5 @@
 package adris.altoclef.util.slots;
 
-import adris.altoclef.Debug;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.*;
@@ -54,7 +53,6 @@ public abstract class Slot {
             case CHEST_SMALL:
                 return new ChestSlot(slot, false, inventory);
             default:
-                Debug.logWarning("Unhandled slot for inventory check: " + getCurrentType());
                 return null;
         }
     }
@@ -165,7 +163,10 @@ public abstract class Slot {
             return true;
         }
         int slotCount = handler != null ? handler.slots.size() : 0;
-        return windowSlot >= (slotCount - (4 * 9));
+        if (handler == null && windowSlot >= 36) {
+        }
+        boolean result = windowSlot >= (slotCount - (4 * 9));
+        return result;
     }
 
     enum ContainerType {

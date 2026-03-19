@@ -89,6 +89,7 @@ public class TabCompleter implements AbstractGameEventListener {
             missing = "";
         }
 
+
         event.completions = new TabCompleteHelper()
                 .append(completions)
                 .sortAlphabetically()

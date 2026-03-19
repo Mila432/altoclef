@@ -1,5 +1,6 @@
 package adris.altoclef.multiversion;
 
+
 //#if MC >= 12005
 import net.minecraft.component.type.FoodComponent;
 //#else
@@ -11,7 +12,9 @@ public class FoodComponentWrapper {
 
 
     public static FoodComponentWrapper of(FoodComponent component) {
-        if (component == null) return null;
+        if (component == null) {
+            return null;
+        }
 
         return new FoodComponentWrapper(component);
     }

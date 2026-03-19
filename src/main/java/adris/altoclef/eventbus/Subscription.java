@@ -12,6 +12,8 @@ public class Subscription<T> {
     }
 
     public void accept(T event) {
+        if (shouldDelete) {
+        }
         callback.accept(event);
     }
 

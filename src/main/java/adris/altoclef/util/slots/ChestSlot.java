@@ -1,5 +1,6 @@
 package adris.altoclef.util.slots;
 
+
 public class ChestSlot extends Slot {
 
     private final boolean big;
@@ -16,18 +17,22 @@ public class ChestSlot extends Slot {
     @Override
     public int inventorySlotToWindowSlot(int inventorySlot) {
         if (inventorySlot < 9) {
-            return inventorySlot + (big ? 81 : 54);
+            int result = inventorySlot + (big ? 81 : 54);
+            return result;
         }
-        return (inventorySlot - 9) + (big ? 54 : 27);
+        int result = (inventorySlot - 9) + (big ? 54 : 27);
+        return result;
     }
 
     @Override
     protected int windowSlotToInventorySlot(int windowSlot) {
         int bottomStart = (big ? 81 : 54);
         if (windowSlot >= bottomStart) {
-            return windowSlot - bottomStart;
+            int result = windowSlot - bottomStart;
+            return result;
         }
-        return (windowSlot + 9) - (big ? 54 : 27);
+        int result = (windowSlot + 9) - (big ? 54 : 27);
+        return result;
     }
 
     @Override

@@ -7,7 +7,13 @@ public class ButlerConfig {
     private static ButlerConfig _instance = new ButlerConfig();
 
     static {
-        ConfigHelper.loadConfig("configs/butler.json", ButlerConfig::new, ButlerConfig.class, newConfig -> _instance = newConfig);
+        try {
+            ConfigHelper.loadConfig("configs/butler.json", ButlerConfig::new, ButlerConfig.class, newConfig -> {
+                _instance = newConfig;
+            });
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**

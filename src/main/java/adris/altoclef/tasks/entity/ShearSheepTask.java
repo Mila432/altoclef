@@ -1,7 +1,6 @@
 package adris.altoclef.tasks.entity;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.SheepEntity;
@@ -24,10 +23,10 @@ public class ShearSheepTask extends AbstractDoToEntityTask {
     @Override
     protected Task onEntityInteract(AltoClef mod, Entity entity) {
         if (!mod.getItemStorage().hasItem(Items.SHEARS)) {
-            Debug.logWarning("Failed to shear sheep because you have no shears.");
             return null;
         }
-        if (mod.getSlotHandler().forceEquipItem(Items.SHEARS)) {
+        boolean equipped = mod.getSlotHandler().forceEquipItem(Items.SHEARS);
+        if (equipped) {
             mod.getController().interactEntity(mod.getPlayer(), entity, Hand.MAIN_HAND);
         }
 
@@ -37,10 +36,18 @@ public class ShearSheepTask extends AbstractDoToEntityTask {
 
     @Override
     protected Optional<Entity> getEntityTarget(AltoClef mod) {
-        return mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+        return mod.getEntityTracker().getClosestEntity(
+                //#if MC >= 12111
+                mod.getPlayer().getEntityPos(),
+                //#else
+                //$$ mod.getPlayer().getPos(),
+                //#endif
                 entity -> {
                     if (entity instanceof SheepEntity sheep) {
-                        return sheep.isShearable() && !sheep.isSheared();
+                        boolean shearable = sheep.isShearable();
+                        boolean sheared = sheep.isSheared();
+                        boolean shouldTarget = shearable && !sheared;
+                        return shouldTarget;
                     }
                     return false;
                 }, SheepEntity.class

@@ -65,7 +65,8 @@ public class CollectWoolTask extends ResourceTask {
 
         // If we find a wool block, break it.
         Block[] woolBlocks = ItemHelper.itemsToBlocks(_wools);
-        if (mod.getBlockScanner().anyFound(woolBlocks)) {
+        boolean foundWoolBlocks = mod.getBlockScanner().anyFound(woolBlocks);
+        if (foundWoolBlocks) {
             return new MineAndCollectTask(new ItemTarget(_wools), woolBlocks, MiningRequirement.HAND);
         }
 
@@ -73,11 +74,14 @@ public class CollectWoolTask extends ResourceTask {
         // Otherwise, kill + loot wool.
 
         // Dimension
-        if (isInWrongDimension(mod) && !mod.getEntityTracker().entityFound(SheepEntity.class)) {
+        boolean wrongDimension = isInWrongDimension(mod);
+        boolean sheepFound = mod.getEntityTracker().entityFound(SheepEntity.class);
+        if (wrongDimension && !sheepFound) {
             return getToCorrectDimensionTask(mod);
         }
 
-        if (mod.getItemStorage().hasItem(Items.SHEARS)) {
+        boolean hasShears = mod.getItemStorage().hasItem(Items.SHEARS);
+        if (hasShears) {
             // Shear sheep.
             return new ShearSheepTask();
         }

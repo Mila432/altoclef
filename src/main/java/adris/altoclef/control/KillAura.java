@@ -20,13 +20,22 @@ import net.minecraft.entity.projectile.thrown.PotionEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.SwordItem;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+//#if MC >= 12111
+import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.component.type.AttributeModifiersComponent;
+import net.minecraft.component.DataComponentTypes;
+//#else
+//$$ import net.minecraft.item.SwordItem;
+//#endif
 
 /**
  * Controls and applies killaura
@@ -42,23 +51,48 @@ public class KillAura {
     public static void equipWeapon(AltoClef mod) {
         List<ItemStack> invStacks = mod.getItemStorage().getItemStacksPlayerInventory(true);
         if (!invStacks.isEmpty()) {
-            float handDamage = Float.NEGATIVE_INFINITY;
+            //#if MC < 12111
+            //$$ float handDamage = Float.NEGATIVE_INFINITY;
+            //#endif
             for (ItemStack invStack : invStacks) {
-                if (invStack.getItem() instanceof SwordItem item) {
-                    float itemDamage = item.getMaterial().getAttackDamage();
+                //#if MC < 12111
+                //$$ if (invStack.getItem() instanceof SwordItem item) {
+                //$$     float itemDamage = item.getMaterial().getAttackDamage();
+                //$$     Item handItem = StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem();
+                //$$     if (handItem instanceof SwordItem handToolItem) {
+                //$$         handDamage = handToolItem.getMaterial().getAttackDamage();
+                //$$     }
+                //$$     if (itemDamage > handDamage) {
+                //$$         mod.getSlotHandler().forceEquipItem(item);
+                //$$     } else {
+                //$$         mod.getSlotHandler().forceEquipItem(handItem);
+                //$$     }
+                //$$ }
+                //#else
+                if (invStack.isIn(ItemTags.SWORDS)) {
+                    double itemDamage = getAttackDamage(invStack);
                     Item handItem = StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem();
-                    if (handItem instanceof SwordItem handToolItem) {
-                        handDamage = handToolItem.getMaterial().getAttackDamage();
+                    double handDamage = 0;
+                    if (handItem.getDefaultStack().isIn(ItemTags.SWORDS)) {
+                        handDamage = getAttackDamage(handItem.getDefaultStack());
                     }
                     if (itemDamage > handDamage) {
-                        mod.getSlotHandler().forceEquipItem(item);
+                        mod.getSlotHandler().forceEquipItem(invStack.getItem());
                     } else {
                         mod.getSlotHandler().forceEquipItem(handItem);
                     }
                 }
+                //#endif
             }
         }
     }
+
+    //#if MC >= 12111
+    private static double getAttackDamage(ItemStack stack) {
+        AttributeModifiersComponent component = stack.getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT);
+        return component.applyOperations(EntityAttributes.ATTACK_DAMAGE, 0.0, EquipmentSlot.MAINHAND);
+    }
+    //#endif
 
     public void tickStart() {
         targets.clear();
@@ -85,13 +119,19 @@ public class KillAura {
                 !mod.getMLGBucketChain().isFalling(mod) && mod.getMLGBucketChain().doneMLG() &&
                 !mod.getMLGBucketChain().isChorusFruiting()) {
             PlayerSlot offhandSlot = PlayerSlot.OFFHAND_SLOT;
-            Item offhandItem = StorageHelper.getItemStackInSlot(offhandSlot).getItem();
-            if (entities.get().getClass() != CreeperEntity.class && entities.get().getClass() != HoglinEntity.class &&
+            ItemStack offhandStack = StorageHelper.getItemStackInSlot(offhandSlot);
+            Item offhandItem = offhandStack.getItem();
+            boolean shouldShield = entities.get().getClass() != CreeperEntity.class && entities.get().getClass() != HoglinEntity.class &&
                     entities.get().getClass() != ZoglinEntity.class && entities.get().getClass() != Entities.WARDEN &&
                     entities.get().getClass() != WitherEntity.class
                     && (mod.getItemStorage().hasItem(Items.SHIELD) || mod.getItemStorage().hasItemInOffhand(Items.SHIELD))
-                    && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)
-                    && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
+                    //#if MC >= 12111
+                    && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandStack)
+                    //#else
+                    //$$                    && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)
+                    //#endif
+                    && mod.getClientBaritone().getPathingBehavior().isSafeToCancel();
+            if (shouldShield) {
                 LookHelper.lookAt(mod, entities.get().getEyePos());
                 ItemStack shieldSlot = StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT);
                 if (shieldSlot.getItem() != Items.SHIELD) {
@@ -146,7 +186,9 @@ public class KillAura {
                 return;
             }
 
-            toHit.ifPresent(entity -> attack(mod, entity, true));
+            toHit.ifPresent(entity -> {
+                attack(mod, entity, true);
+            });
         }
     }
 
@@ -186,7 +228,8 @@ public class KillAura {
                 canAttack = mod.getSlotHandler().forceDeequipHitTool();
             }
             if (canAttack) {
-                if (mod.getPlayer().isOnGround() || mod.getPlayer().getVelocity().getY() < 0 || mod.getPlayer().isTouchingWater()) {
+                boolean shouldAttack = mod.getPlayer().isOnGround() || mod.getPlayer().getVelocity().getY() < 0 || mod.getPlayer().isTouchingWater();
+                if (shouldAttack) {
                     attackedLastTick = true;
                     mod.getControllerExtras().attack(entity);
                 }

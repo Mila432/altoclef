@@ -39,7 +39,8 @@ public class CollectCocoaBeansTask extends ResourceTask {
 
         Predicate<BlockPos> validCocoa = (blockPos) -> {
             if (!mod.getChunkTracker().isChunkLoaded(blockPos)) {
-                return _wasFullyGrown.contains(blockPos);
+                boolean wasGrown = _wasFullyGrown.contains(blockPos);
+                return wasGrown;
             }
 
             BlockState s = mod.getWorld().getBlockState(blockPos);
@@ -53,13 +54,15 @@ public class CollectCocoaBeansTask extends ResourceTask {
         };
 
         // Break mature cocoa blocks
-        if (mod.getBlockScanner().anyFound(validCocoa, Blocks.COCOA)) {
+        boolean anyFound = mod.getBlockScanner().anyFound(validCocoa, Blocks.COCOA);
+        if (anyFound) {
             setDebugState("Breaking cocoa blocks");
             return new DoToClosestBlockTask(DestroyBlockTask::new, validCocoa, Blocks.COCOA);
         }
 
         // Dimension
-        if (isInWrongDimension(mod)) {
+        boolean wrongDimension = isInWrongDimension(mod);
+        if (wrongDimension) {
             return getToCorrectDimensionTask(mod);
         }
 

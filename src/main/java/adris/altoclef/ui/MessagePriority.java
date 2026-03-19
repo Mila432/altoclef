@@ -1,5 +1,6 @@
 package adris.altoclef.ui;
 
+
 public enum MessagePriority {
     ASAP(3),
     TIMELY(2),

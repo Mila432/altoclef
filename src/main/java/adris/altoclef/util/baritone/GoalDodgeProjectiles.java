@@ -1,7 +1,6 @@
 package adris.altoclef.util.baritone;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.util.helpers.BaritoneHelper;
 import adris.altoclef.util.helpers.ProjectileHelper;
 import baritone.api.pathing.goals.Goal;
@@ -50,10 +49,10 @@ public class GoalDodgeProjectiles implements Goal {
                         Vec3d hit = projectile.getCachedHit();
                         //Debug.logMessage("Hit Delta: " + p.subtract(hit));
 
-                        if (isHitCloseEnough(hit, p)) return false;
+                        if (isHitCloseEnough(hit, p)) {
+                            return false;
+                        }
                     } catch (Exception e) {
-                        Debug.logWarning("Weird exception caught while checking for goal: " + e.getMessage());
-                        /// ????? No clue why a nullptrexception happens here.
                     }
                     //double sqFromMob = creepuh.squaredDistanceTo(x, y, z);
                     //if (sqFromMob < _distance*_distance) return false;

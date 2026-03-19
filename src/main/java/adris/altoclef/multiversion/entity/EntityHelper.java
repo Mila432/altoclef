@@ -11,8 +11,14 @@ public class EntityHelper {
 
     //#if MC >= 12100
     public static boolean isInNetherPortal(Entity entity) {
-       return (entity.portalManager != null && ((PortalManagerAccessor)entity.portalManager).accessPortal() instanceof NetherPortalBlock && entity.portalManager.isInPortal())
-               || entity.getPortalCooldown() > 0;
+       boolean portalManagerNotNull = entity.portalManager != null;
+       boolean portalBlockIsNether = portalManagerNotNull && ((PortalManagerAccessor)entity.portalManager).accessPortal() instanceof NetherPortalBlock;
+       boolean isInPortal = portalManagerNotNull && entity.portalManager.isInPortal();
+       boolean cooldownActive = entity.getPortalCooldown() > 0;
+       boolean result = (portalManagerNotNull && portalBlockIsNether && isInPortal) || cooldownActive;
+       
+       
+       return result;
     }
     //#endif
 

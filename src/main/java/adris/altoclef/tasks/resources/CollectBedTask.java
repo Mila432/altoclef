@@ -46,7 +46,8 @@ public class CollectBedTask extends CraftWithMatchingWoolTask {
     @Override
     protected Task onResourceTick(AltoClef mod) {
         // Break beds from the world if possible, that would be pretty fast.
-        if (mod.getBlockScanner().anyFound(BEDS)) {
+        boolean bedFoundInWorld = mod.getBlockScanner().anyFound(BEDS);
+        if (bedFoundInWorld) {
             // Failure + blacklisting is encapsulated within THIS task
             return new MineAndCollectTask(new ItemTarget(ItemHelper.BED, 1), BEDS, MiningRequirement.HAND);
         }

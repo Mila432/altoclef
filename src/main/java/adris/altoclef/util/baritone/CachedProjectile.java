@@ -25,6 +25,11 @@ public class CachedProjectile {
     }
 
     public boolean needsToRecache() {
-        return !cacheHeld || lastCache.elapsed();
+        boolean held = cacheHeld;
+        boolean elapsed = lastCache.elapsed();
+        boolean needsRecache = !held || elapsed;
+        if (needsRecache) {
+        }
+        return needsRecache;
     }
 }

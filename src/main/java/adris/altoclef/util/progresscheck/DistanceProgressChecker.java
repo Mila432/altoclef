@@ -46,6 +46,8 @@ public class DistanceProgressChecker implements IProgressChecker<Vec3d> {
 
     @Override
     public void reset() {
+        if (start != null) {
+        }
         start = null;//_prevPos;
         distanceChecker.setProgress(0.0);
         distanceChecker.reset();

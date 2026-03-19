@@ -1,5 +1,6 @@
 package adris.altoclef.util.time;
 
+
 public abstract class BaseTimer {
     private double prevTime = 0;
     private double interval;

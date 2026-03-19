@@ -12,6 +12,10 @@ public class GetWithinRangeOfBlockTask extends CustomBaritoneGoalTask {
     public final int range;
 
     public GetWithinRangeOfBlockTask(BlockPos blockPos, int range) {
+        if (blockPos == null) {
+        }
+        if (range <= 0) {
+        }
         this.blockPos = blockPos;
         this.range = range;
     }
@@ -24,7 +28,12 @@ public class GetWithinRangeOfBlockTask extends CustomBaritoneGoalTask {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof GetWithinRangeOfBlockTask task) {
-            return task.blockPos.equals(blockPos) && task.range == range;
+            boolean posEqual = task.blockPos.equals(blockPos);
+            boolean rangeEqual = task.range == range;
+            boolean result = posEqual && rangeEqual;
+            if (!result) {
+            }
+            return result;
         }
         return false;
     }

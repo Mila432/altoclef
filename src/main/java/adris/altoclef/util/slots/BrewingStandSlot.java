@@ -1,5 +1,6 @@
 package adris.altoclef.util.slots;
 
+
 public class BrewingStandSlot extends Slot {
     public static final BrewingStandSlot LEFT_POTION = new BrewingStandSlot(0);
     public static final BrewingStandSlot MIDDLE_POTION = new BrewingStandSlot(1);
@@ -17,6 +18,8 @@ public class BrewingStandSlot extends Slot {
 
     @Override
     public int inventorySlotToWindowSlot(int inventorySlot) {
+        if (inventorySlot < 0 || inventorySlot > 35) {
+        }
         if (inventorySlot < 9) {
             return inventorySlot + 32;
         }
@@ -25,6 +28,8 @@ public class BrewingStandSlot extends Slot {
 
     @Override
     protected int windowSlotToInventorySlot(int windowSlot) {
+        if (windowSlot < 0 || windowSlot > 40) {
+        }
         if (windowSlot >= 32) {
             return windowSlot - 32;
         }

@@ -1,7 +1,6 @@
 package adris.altoclef.util.helpers;
 
 import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.mixins.AbstractFurnaceScreenHandlerAccessor;
 import adris.altoclef.multiversion.item.ItemVer;
@@ -34,6 +33,15 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+//#if MC >= 12111
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.EquippableComponent;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.item.equipment.EquipmentType;
+//#else
+//$$ import net.minecraft.item.ArmorItem;
+//#endif
 
 /**
  * Helper functions for interpreting containers/slots/windows/inventory
@@ -70,22 +78,41 @@ public class StorageHelper {
         PlayerInventory inv = player.getInventory();
         if (inv != null) {
             if (slot.equals(PlayerSlot.OFFHAND_SLOT))
-                return inv.offHand.stream().findFirst().orElse(ItemStack.EMPTY);
+                //#if MC >= 12111
+                return inv.getStack(PlayerInventory.OFF_HAND_SLOT);
+                //#else
+                //$$ return inv.offHand.stream().findFirst().orElse(ItemStack.EMPTY);
+                //#endif
             if (slot.equals(PlayerSlot.ARMOR_HELMET_SLOT))
-                return inv.getArmorStack(3);
+                //#if MC >= 12111
+                return inv.getStack(36 + 3);
+                //#else
+                //$$ return inv.getArmorStack(3);
+                //#endif
             if (slot.equals(PlayerSlot.ARMOR_CHESTPLATE_SLOT))
-                return inv.getArmorStack(2);
+                //#if MC >= 12111
+                return inv.getStack(36 + 2);
+                //#else
+                //$$ return inv.getArmorStack(2);
+                //#endif
             if (slot.equals(PlayerSlot.ARMOR_LEGGINGS_SLOT))
-                return inv.getArmorStack(1);
+                //#if MC >= 12111
+                return inv.getStack(36 + 1);
+                //#else
+                //$$ return inv.getArmorStack(1);
+                //#endif
             if (slot.equals(PlayerSlot.ARMOR_BOOTS_SLOT))
-                return inv.getArmorStack(0);
+                //#if MC >= 12111
+                return inv.getStack(36 + 0);
+                //#else
+                //$$ return inv.getArmorStack(0);
+                //#endif
         }
         try {
             // We might have messed up and opened the wrong slot.
             net.minecraft.screen.slot.Slot mcSlot = player.currentScreenHandler.getSlot(slot.getWindowSlot());
             return (mcSlot != null) ? mcSlot.getStack() : ItemStack.EMPTY;
         } catch (Exception e) {
-            Debug.logWarning("Screen Slot Error (ignored)");
             e.printStackTrace();
             return ItemStack.EMPTY;
         }
@@ -122,7 +149,6 @@ public class StorageHelper {
             case DIAMOND ->
                     h(inventoryOnly, Items.DIAMOND_PICKAXE) || h(inventoryOnly, Items.NETHERITE_PICKAXE);
             default -> {
-                Debug.logError("You missed a spot");
                 yield false;
             }
         };
@@ -150,7 +176,8 @@ public class StorageHelper {
             if (!slot.isSlotInPlayerInventory())
                 continue;
             ItemStack stack = getItemStackInSlot(slot);
-            if (stack.getItem() instanceof ToolItem) {
+            //#if MC >= 12111
+            if (ToolMaterialVer.isTool(stack.getItem())) {
                 if (stack.getItem().getDefaultStack().isSuitableFor(state)) {
                     if (shouldSaveStack(mod,  state.getBlock(), stack)) continue;
 
@@ -161,6 +188,19 @@ public class StorageHelper {
                     }
                 }
             }
+            //#else
+            //$$ if (stack.getItem() instanceof ToolItem) {
+            //$$     if (stack.getItem().getDefaultStack().isSuitableFor(state)) {
+            //$$         if (shouldSaveStack(mod,  state.getBlock(), stack)) continue;
+            //$$
+            //$$         double speed = ToolSet.calculateSpeedVsBlock(stack, state);
+            //$$         if (speed > highestSpeed) {
+            //$$             highestSpeed = speed;
+            //$$             bestToolSlot = slot;
+            //$$         }
+            //$$     }
+            //$$ }
+            //#endif
             if (stack.getItem() == Items.SHEARS) {
                 // Shears take priority over leaf blocks.
                 if (ItemHelper.areShearsEffective(state.getBlock())) {
@@ -237,11 +277,20 @@ public class StorageHelper {
 
             Item item = stack.getItem();
 
-            if (!(item instanceof ToolItem tool)) continue;
+            //#if MC >= 12111
+            if (!ToolMaterialVer.isTool(item)) continue;
+            
+            Class clazz = item.getClass();
+            
+            int level = ToolMaterialVer.getMiningLevel(item);
+            //#else
+            //$$ if (!(item instanceof ToolItem tool)) continue;
+            //$$ 
+            //$$ Class clazz = tool.getClass();
+            //$$ 
+            //$$ int level = ToolMaterialVer.getMiningLevel(tool);
+            //#endif
 
-            Class clazz = tool.getClass();
-
-            int level = ToolMaterialVer.getMiningLevel(tool);
             int prevBest = bestMaterials.getOrDefault(clazz, 0);
 
             if (level > prevBest) {
@@ -290,8 +339,15 @@ public class StorageHelper {
                 return possibleSlots.stream().min((leftSlot, rightSlot) -> {
                     ItemStack left = StorageHelper.getItemStackInSlot(leftSlot),
                             right = StorageHelper.getItemStackInSlot(rightSlot);
-                    boolean leftIsTool = left.getItem() instanceof ToolItem;
-                    boolean rightIsTool = right.getItem() instanceof ToolItem;
+                    
+                    //#if MC >= 12111
+                    boolean leftIsTool = ToolMaterialVer.isTool(left.getItem());
+                    boolean rightIsTool = ToolMaterialVer.isTool(right.getItem());
+                    //#else
+                    //$$ boolean leftIsTool = left.getItem() instanceof ToolItem;
+                    //$$ boolean rightIsTool = right.getItem() instanceof ToolItem;
+                    //#endif
+                    
                     // Prioritize tools over materials.
                     if (rightIsTool && !leftIsTool) {
                         return -1;
@@ -300,10 +356,18 @@ public class StorageHelper {
                     }
                     if (rightIsTool) {
                         // Prioritize material type, then durability.
-                        ToolItem leftTool = (ToolItem) left.getItem();
-                        ToolItem rightTool = (ToolItem) right.getItem();
-                        if (ToolMaterialVer.getMiningLevel(leftTool) != ToolMaterialVer.getMiningLevel(rightTool))
-                            return ToolMaterialVer.getMiningLevel(leftTool) - ToolMaterialVer.getMiningLevel(rightTool);
+                        //#if MC >= 12111
+                        int leftLevel = ToolMaterialVer.getMiningLevel(left.getItem());
+                        int rightLevel = ToolMaterialVer.getMiningLevel(right.getItem());
+                        //#else
+                        //$$ ToolItem leftTool = (ToolItem) left.getItem();
+                        //$$ ToolItem rightTool = (ToolItem) right.getItem();
+                        //$$ int leftLevel = ToolMaterialVer.getMiningLevel(leftTool);
+                        //$$ int rightLevel = ToolMaterialVer.getMiningLevel(rightTool);
+                        //#endif
+                        
+                        if (leftLevel != rightLevel)
+                            return leftLevel - rightLevel;
                         // We want less damage.
                         return left.getDamage() - right.getDamage();
                     }
@@ -417,11 +481,22 @@ public class StorageHelper {
         ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
 
         for (Item item : any) {
-            if (item instanceof ArmorItem armor) {
-                ItemStack equippedStack = player.getInventory().getArmorStack(armor.getSlotType().getEntitySlotId());
+            //#if MC >= 12111
+            EquippableComponent equippable = item.getComponents().get(DataComponentTypes.EQUIPPABLE);
+            if (equippable != null && equippable.slot().getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
+                EquipmentSlot slot = equippable.slot();
+                int index = 36 + slot.getEntitySlotId();
+                ItemStack equippedStack = player.getInventory().getStack(index);
                 if (equippedStack.getItem().equals(item))
                     return true;
             }
+            //#else
+            //$$ if (item instanceof ArmorItem armor) {
+            //$$     ItemStack equippedStack = player.getInventory().getArmorStack(armor.getSlotType().getEntitySlotId());
+            //$$     if (equippedStack.getItem().equals(item))
+            //$$         return true;
+            //$$ }
+            //#endif
             if (item instanceof ShieldItem shield) {
                 ItemStack equippedStack = player.getInventory().getStack(OFF_HAND_SLOT);
                 if (equippedStack.getItem().equals(shield))
@@ -564,7 +639,6 @@ public class StorageHelper {
                     }
 
                     if (!satisfied) {
-                        //Debug.logMessage("FAILED TO SATISFY " + slot + " : needs " + needs);
                         // We couldn't satisfy this slot in either the inventory or crafting output.
                         return false;
                     }

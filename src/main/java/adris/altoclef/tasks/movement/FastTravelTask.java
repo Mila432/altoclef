@@ -43,6 +43,8 @@ public class FastTravelTask extends Task {
     public FastTravelTask(BlockPos overworldTarget, Integer threshold, boolean collectPortalMaterialsIfAbsent) {
         target = overworldTarget;
         this.threshold = null;
+        if (threshold != null) {
+        }
         this.collectPortalMaterialsIfAbsent = collectPortalMaterialsIfAbsent;
     }
 
@@ -76,6 +78,8 @@ public class FastTravelTask extends Task {
 
         // EDGE CASE: We die in the nether, stop force walking, we want to start over.
         if (MinecraftClient.getInstance().currentScreen instanceof DeathScreen) {
+            if (_forceOverworldWalking) {
+            }
             _forceOverworldWalking = false;
         }
 
@@ -84,6 +88,9 @@ public class FastTravelTask extends Task {
                 _attemptToMoveToIdealNetherCoordinateTimeout.reset();
                 // WALK
                 if (_forceOverworldWalking || WorldHelper.inRangeXZ(mod.getPlayer(), target, getOverworldThreshold(mod))) {
+                    if (!_forceOverworldWalking) {
+                        double distance = Math.sqrt(Math.pow(mod.getPlayer().getBlockPos().getX() - target.getX(), 2) + Math.pow(mod.getPlayer().getBlockPos().getZ() - target.getZ(), 2));
+                    }
                     _forceOverworldWalking = true;
                     setDebugState("Walking: We're close enough to our target");
 
@@ -114,7 +121,11 @@ public class FastTravelTask extends Task {
                 if (!_forceOverworldWalking) {
                     // After walking a bit, the moment we go back into the overworld, walk again.
                     Optional<BlockPos> portalEntrance = mod.getMiscBlockTracker().getLastUsedNetherPortal(Dimension.NETHER);
-                    if (portalEntrance.isPresent() && !portalEntrance.get().isWithinDistance(mod.getPlayer().getPos(), 3)) {
+                    //#if MC >= 12111
+                    if (portalEntrance.isPresent() && !portalEntrance.get().isWithinDistance(mod.getPlayer().getEntityPos(), 3)) {
+                    //#else
+                    //$$ if (portalEntrance.isPresent() && !portalEntrance.get().isWithinDistance(mod.getPlayer().getPos(), 3)) {
+                    //#endif
                         _forceOverworldWalking = true;
                     }
                 }
@@ -122,7 +133,6 @@ public class FastTravelTask extends Task {
                 // If we're going to the overworld, keep going.
                 if (_goToOverworldTask.isActive() && !_goToOverworldTask.isFinished()) {
                     setDebugState("Going back to overworld");
-
                     return _goToOverworldTask;
                 }
 
@@ -136,8 +146,9 @@ public class FastTravelTask extends Task {
                     return new PickupDroppedItemTask(new ItemTarget(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE), true);
                 }
 
-                if (WorldHelper.inRangeXZ(mod.getPlayer(), netherTarget, IN_NETHER_CLOSE_ENOUGH_THRESHOLD) &&
-                        mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
+                boolean inRange = WorldHelper.inRangeXZ(mod.getPlayer(), netherTarget, IN_NETHER_CLOSE_ENOUGH_THRESHOLD);
+                boolean safeToCancel = mod.getClientBaritone().getPathingBehavior().isSafeToCancel();
+                if (inRange && safeToCancel) {
                     // If we're precisely at our target XZ or if we've tried long enough
                     if ((mod.getPlayer().getBlockX() == netherTarget.getX() && mod.getPlayer().getBlockZ() == netherTarget.getZ()) || _attemptToMoveToIdealNetherCoordinateTimeout.elapsed()) {
                         return _goToOverworldTask;
